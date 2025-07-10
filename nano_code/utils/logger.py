@@ -1,6 +1,7 @@
 import json
 import logging
 from rich.console import Console
+from rich.markdown import Markdown as M
 
 
 class SessionLogger:
@@ -33,9 +34,9 @@ class AIConsoleLogger:
         # self.console.rule()
 
     def info(self, session_id: str, message: str):
-        self.console.print(f"{message}")
-        self.console.rule()
+        self.console.print(M(message))
+        self.console.rule(style="gray")
 
     def error(self, session_id: str, message: str):
         self.console.print(f"❌ {message}")
-        self.console.rule()
+        self.console.rule(style="gray")

@@ -3,6 +3,8 @@ import asyncio
 import json
 from rich.prompt import Prompt
 from rich.console import Console
+from rich.markdown import Markdown as M
+from rich.panel import Panel
 
 
 async def main_loop():
@@ -55,7 +57,8 @@ There are few rules:
         response = r.choices[0]
         if response.finish_reason == "tool_calls":
             wait_user = False
-            session.log(f"✍️ {response.message.content}...")
+            if response.message.content is not None:
+                CONSOLE.print(Panel(M(response.message.content), title="Assistant"))
             messages.append(response.message)
             tool_calls = [
                 t
@@ -78,7 +81,7 @@ There are few rules:
                     }
                 )
             continue
-        session.log(f"💬 {response.message.content}")
+        CONSOLE.print(Panel(M(response.message.content), title="Assistant"))
         wait_user = True
 
 

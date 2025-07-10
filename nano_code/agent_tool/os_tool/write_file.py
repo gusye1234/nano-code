@@ -10,7 +10,7 @@ class WriteFileTool(AgentToolDefine):
     def init(cls, **kwargs):
         return cls(
             name="write_file",
-            description="""Writes content to a specified file in the local filesystem. """,
+            description="""Writes content to a specified file in the local filesystem. You can use this tool to write textual content to a file, including code, text, plans...""",
             parameters_schema={
                 "properties": {
                     "file_path": {
@@ -38,10 +38,6 @@ class WriteFileTool(AgentToolDefine):
                 self.name,
                 f"File {absolute_path} is not within the working directory {session.working_dir}",
             )
-        # if session.ignore_path(absolute_path):
-        #     return AgentToolReturn.error(
-        #         self.name, f"File {absolute_path} is git-ignored"
-        #     )
         dir_path = os.path.dirname(absolute_path)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
