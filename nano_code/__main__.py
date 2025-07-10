@@ -16,6 +16,12 @@ async def main_loop():
     CONSOLE = Console()
     session = Session(working_dir=os.getcwd(), logger=AIConsoleLogger(CONSOLE))
 
+    code_memories = session.get_memory()
+    memories = (
+        f"""Below are some working memories:
+{code_memories}"""
+        or ""
+    )
     messages = []
     wait_user = True
     while True:
@@ -30,16 +36,9 @@ async def main_loop():
                 }
             )
             CONSOLE.rule()
-        code_memories = session.get_memory()
-        memories = (
-            f"""Below are some working memories:
-{code_memories}"""
-            or ""
-        )
         r = await llm_complete(
             session,
             session.working_env.llm_main_model,
-            # "claude-sonnet-4-20250514",
             messages,
             system_prompt=f"""You are a helpful assistant that can help with tasks using tools.
 Your current working directory is {session.working_dir}.
@@ -86,5 +85,9 @@ There are few rules:
         wait_user = True
 
 
-if __name__ == "__main__":
+def main():
     asyncio.run(main_loop())
+
+
+if __name__ == "__main__":
+    main()
