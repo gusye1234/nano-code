@@ -3,9 +3,11 @@
     <img alt="Shows the nano-code logo" src="./assets/logo.png">
   </picture>
   <h1>nano-code</h1>
-  <strong>
-    A tiny agent in your terminal
-  </strong>
+	<p>
+    <strong>
+      A tiny agent in your terminal
+    </strong>
+  </p>
   <p>
     <a href="https://pypi.org/project/nano-code/">
       <img src="https://img.shields.io/pypi/v/nano-code.svg">
