@@ -7,7 +7,7 @@ from gitignore_parser import parse_gitignore
 from typing import Literal
 from ..constants import NANO_CODE_TEMP_DIR, MEMORY_FILE
 from ..utils.paths import upward_git_root
-from ..utils.logger import SessionLogger
+from ..utils.logger import SessionLogger, AIConsoleLogger
 from ..env import Env
 from .cost import (
     LLMCheckpoint,
@@ -15,6 +15,12 @@ from .cost import (
     ToolCheckpoint,
     ToolCheckpointFailed,
 )
+
+
+def ascii_progress_bar(current, maximum, bar_width=20):
+    filled = int(bar_width * min(current, maximum) / maximum)
+    bar = f"{'█'*filled}"
+    return bar
 
 
 @dataclass
@@ -25,6 +31,7 @@ class Session:
     session_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
     maximum_search_dir: int = 200
+    maximum_token_window_size: int = 32000
     working_env: Env = field(default_factory=lambda: Env.from_home())
     logger: SessionLogger = None
 
@@ -85,7 +92,6 @@ class Session:
         return os.path.abspath(path).startswith(self.working_dir)
 
     def find_memory_paths(self) -> list[str]:
-
         __search_dir = 0
         memory_contents = []
         for root, dirs, files in os.walk(self.__project_root):
@@ -120,9 +126,11 @@ class Session:
         self, llm_checkpoint: LLMCheckpoint | LLMCheckpointFailed
     ):
         self.running_llm_checkpoints.append(llm_checkpoint)
-        self.log(
-            f"Current Context Size: {llm_checkpoint.response.usage.total_tokens} tokens",
-        )
+        current = llm_checkpoint.response.usage.total_tokens
+        maximum = self.maximum_token_window_size
+        bar = ascii_progress_bar(current, maximum)
+        msg = f"{current}/{maximum} tokens {bar}"
+        self.log(msg)
 
     def update_tool_checkpoint(
         self, tool_checkpoint: ToolCheckpoint | ToolCheckpointFailed

@@ -25,7 +25,7 @@ For text files, it can read specific line ranges.""",
                         "type": "number",
                     },
                     "limit": {
-                        "description": "Optional: For text files, maximum number of lines to read. Use with 'offset' to paginate through large files. If omitted, reads the entire file (if feasible, up to a default limit).",
+                        "description": "Available options: [50, 100, 200,...] For text files, maximum number of lines to read. Use with 'offset' to paginate through large files. If omitted, reads the entire file (if feasible, up to a default limit).",
                         "type": "number",
                     },
                 },
