@@ -1,0 +1,54 @@
+import os
+from ...constants import MAX_READ_FILE_LINES, MAX_LINE_CHAR_LENGTH
+from ..base import AgentToolDefine, AgentToolReturn
+from ...core.session import Session
+from ...utils.file import is_text_file
+
+
+class WriteFileTool(AgentToolDefine):
+    @classmethod
+    def init(cls, **kwargs):
+        return cls(
+            name="write_file",
+            description="""Writes content to a specified file in the local filesystem. """,
+            parameters_schema={
+                "properties": {
+                    "file_path": {
+                        "description": "The absolute path to the file to write to (e.g., '/home/user/project/file.txt'). Relative paths are not supported.",
+                        "type": "string",
+                    },
+                    "content": {
+                        "description": "The content to write to the file.",
+                        "type": "string",
+                    },
+                },
+                "required": ["file_path", "content"],
+                "type": "object",
+            },
+        )
+
+    async def _execute(self, session: Session, arguments) -> AgentToolReturn:
+        absolute_path = arguments["file_path"]
+        content = arguments["content"]
+
+        absolute_path = os.path.abspath(absolute_path)
+
+        if not session.path_within_root(absolute_path):
+            return AgentToolReturn.error(
+                self.name,
+                f"File {absolute_path} is not within the working directory {session.working_dir}",
+            )
+        # if session.ignore_path(absolute_path):
+        #     return AgentToolReturn.error(
+        #         self.name, f"File {absolute_path} is git-ignored"
+        #     )
+        dir_path = os.path.dirname(absolute_path)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+
+        with open(absolute_path, "w") as f:
+            f.write(content)
+        return AgentToolReturn(
+            for_llm=f"Write File {absolute_path} successfully",
+            for_human=f"Write File {absolute_path} successfully",
+        )
