@@ -1,4 +1,23 @@
-# nano-code 🧬📜
+<div align="center">
+  <picture>
+    <img alt="Shows the nano-code logo" src="./assets/logo.png">
+  </picture>
+  <h1>nano-code</h1>
+  <strong>
+    A tiny agent in your terminal
+  </strong>
+  <p>
+    <a href="https://pypi.org/project/nano-code/">
+      <img src="https://img.shields.io/pypi/v/nano-code.svg">
+    </a>
+  </p>
+</div>
+
+
+
+
+
+
 
 `nano-code` is a **tiny, batteries-included code-assistant framework** written in Python 3.11+.  Inspired by Google’s *Gemini Code* demo, it lets you spin up an interactive CLI agent powered by OpenAI (or any compatible) LLM and a growing toolbox of actions such as reading files, listing directories, searching text and more.
 
@@ -51,9 +70,6 @@ export LLM_BASE_URL="https://api.openai.com/v1"
 ```bash
 uvx nano-code
 ```
-
-Behind the scenes the agent converts your plain-English requests into JSON arguments for the tools defined in `nano_code/agent_tool`.  Every tool returns two flavours of output: one optimised for the LLM’s next prompt (`for_llm`) and one for the human terminal (`for_human`).
-
 ---
 
 ## 🗂 Project structure
