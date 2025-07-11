@@ -6,6 +6,7 @@ from .os_tool import (
     find_files,
     search_text,
     edit_file,
+    mv_file_or_dir,
 )
 from .util_tool import add_tasks
 
@@ -16,6 +17,7 @@ OS_TOOLS.add_tools(
         read_file.ReadFileTool.init(),
         create_file.CreateFileTool.init(),
         edit_file.EditFileTool.init(),
+        mv_file_or_dir.MoveFileOrDirTool.init(),
         find_files.FindFilesTool.init(),
         search_text.SearchTextTool.init(),
     ]
