@@ -9,9 +9,10 @@ class EditFileTool(AgentToolDefine):
     @classmethod
     def init(cls, **kwargs):
         return cls(
-            name="write_file",
+            name="edit_file",
             description="""Edit content of a specified file in the local filesystem. 
 You can use this tool to edit an existing file. By using different combinations of the parameters, you can edit different parts of the file.
+When edit file, always make sure you read the current content of the file first.
 
 For example:
 - Replace first 10 lines with content `hello world`:
@@ -26,6 +27,12 @@ For example:
     "file_path": "/home/user/project/file.txt",
     "content": "hello\nworld",
     "start_line": 10,
+}
+- If file's line number is 10, then insert a content at the end is:
+{
+    "file_path": "/home/user/project/file.txt",
+    "content": "hello\nworld",
+    "start_line": 11,
 }
 - Delete the first 10 lines:
 {
@@ -42,7 +49,7 @@ For example:
                         "type": "string",
                     },
                     "content": {
-                        "description": "The content to write to the file. If you want to delete, set it to an empty string.",
+                        "description": "The content to write to the file. If you want to delete, set it to an empty string. Multiple lines should be separated by newlines.",
                         "type": "string",
                     },
                     "start_line": {
@@ -61,7 +68,7 @@ For example:
 
     async def _execute(self, session: Session, arguments) -> AgentToolReturn:
         absolute_path = arguments["file_path"]
-        content = arguments["content"]
+        content = arguments["content"].strip()
         start_line = arguments["start_line"]
         end_line = arguments.get("end_line", None)
 
@@ -86,12 +93,19 @@ For example:
             )
 
         with open(absolute_path, "r") as f:
-            lines = f.readlines()
+            lines = f.read().strip()
+            lines = lines.split("\n")
 
+        if start_line > len(lines) + 1:
+            return AgentToolReturn.error(
+                self.name,
+                f"Start line {start_line} is greater than the number of lines in the file {len(lines)}",
+            )
         action = None
         edit_range = f"L{start_line}{f'-{end_line}' if end_line else ''}"
         if end_line is None:
             # inserting
+            print("inserting", start_line, content, lines)
             lines.insert(start_line - 1, content)
             action = "INSERT"
         elif content == "":
@@ -103,9 +117,9 @@ For example:
             lines = lines[: start_line - 1] + content.split("\n") + lines[end_line:]
             action = "REPLACE"
         with open(absolute_path, "w") as f:
-            f.writelines(lines)
+            f.write("\n".join(lines))
 
         return AgentToolReturn(
             for_llm=f"Edit File {absolute_path} successfully: {action} {edit_range}",
-            for_human=f"Edit File {absolute_path} successfully",
+            for_human=f"Edit File {absolute_path} successfully[{action} {edit_range}]",
         )

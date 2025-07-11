@@ -65,8 +65,7 @@ def is_text_file(file_path: str) -> tuple[bool, str]:
         file_name = get_filename(file_path)
         if file_name in SPECIAL_FILE_NAME:
             return True, file_name
-        return False, file_name
-
+    # Special case: unknown extension, try decoding
     # Text file patterns
     text_mime_types = [
         "text/",
