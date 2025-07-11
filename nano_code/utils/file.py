@@ -16,6 +16,8 @@ TEXT_EXT = {
     ".rs",
     ".swift",
     ".ts",
+    ".tsx",
+    ".jsx",
     ".html",
     ".json",
     ".yaml",
@@ -54,14 +56,12 @@ def is_text_file(file_path: str) -> tuple[bool, str]:
     Returns: (is_text, mime_type)
     """
     # Get MIME type
+    ext = get_file_extname(file_path)
+    if ext in TEXT_EXT:
+        return True, ext
+
     mime_type = mime_file_type(file_path)
     if mime_type is None:
-        ext = get_file_extname(file_path)
-        if ext in TEXT_EXT:
-            return True, ext
-        if ext.strip() != "":
-            return False, ext
-
         file_name = get_filename(file_path)
         if file_name in SPECIAL_FILE_NAME:
             return True, file_name
@@ -79,3 +79,11 @@ def is_text_file(file_path: str) -> tuple[bool, str]:
     is_text = any(mime_type.startswith(pattern) for pattern in text_mime_types)
 
     return is_text, mime_type
+
+
+if __name__ == "__main__":
+    print(
+        is_text_file(
+            "/Users/gustavoye/Desktop/learn_w/daytona/apps/api/src/app.module.ts"
+        )
+    )

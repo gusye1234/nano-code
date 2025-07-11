@@ -6,6 +6,8 @@ from enum import StrEnum
 from ..core.session import Session
 from ..core.cost import ToolCheckpointFailed, ToolCheckpoint
 from ..agent_tool.tool_schema import SchemaValidator
+from ..constants import MAX_FOR_LLM_TOOL_RETURN_TOKENS
+from ..utils.tokens import truncate_text
 
 
 class ToolBehavior(StrEnum):
@@ -70,6 +72,7 @@ class AgentToolDefine(BaseModel, ABC):
             r = await self._execute(session, arguments)
             finish_time = asyncio.get_event_loop().time()
 
+            r.for_llm = truncate_text(r.for_llm, MAX_FOR_LLM_TOOL_RETURN_TOKENS)
             session.update_tool_checkpoint(
                 ToolCheckpoint(
                     tool_name=self.name,

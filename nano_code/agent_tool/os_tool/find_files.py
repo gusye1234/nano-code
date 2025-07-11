@@ -64,7 +64,6 @@ Ideal for quickly locating files based on their name or path structure, especial
         try:
             # Use glob to find matching files with root_dir parameter
             matched_files = glob.glob(pattern, recursive=True, root_dir=search_path)
-
             # Convert to absolute paths and filter
             results = []
             for file_path in matched_files:

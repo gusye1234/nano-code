@@ -5,16 +5,13 @@ from rich.prompt import Prompt
 from rich.console import Console
 from rich.markdown import Markdown as M
 from rich.panel import Panel
+from .core.session import Session
+from .llm import llm_complete
+from .agent_tool.tools import OS_TOOLS
+from .utils.logger import AIConsoleLogger
 
 
-async def main_loop():
-    from .core.session import Session
-    from .llm import llm_complete
-    from .agent_tool.tools import OS_TOOLS
-    from .utils.logger import AIConsoleLogger
-
-    CONSOLE = Console()
-    session = Session(working_dir=os.getcwd(), logger=AIConsoleLogger(CONSOLE))
+async def agent_loop(session: Session, CONSOLE: Console):
 
     code_memories = session.get_memory()
     memories = (
@@ -60,7 +57,7 @@ There are few rules:
             wait_user = False
             if response.message.content is not None:
                 CONSOLE.print(Panel(M(response.message.content), title="Assistant"))
-            messages.append(response.message)
+            messages.append(response.message.model_dump())
             tool_calls = [
                 t
                 for t in response.message.tool_calls
@@ -84,6 +81,15 @@ There are few rules:
             continue
         CONSOLE.print(Panel(M(response.message.content), title="Assistant"))
         wait_user = True
+
+
+async def main_loop():
+    try:
+        CONSOLE = Console()
+        session = Session(working_dir=os.getcwd(), logger=AIConsoleLogger(CONSOLE))
+        await agent_loop(session, CONSOLE)
+    finally:
+        session.save_checkpoints()
 
 
 def main():
