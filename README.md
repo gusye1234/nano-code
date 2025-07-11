@@ -9,11 +9,15 @@
     </strong>
   </p>
   <p>
+    <code>uvx nano-code@latest</code>
+  </p>
+  <p>
     <a href="https://pypi.org/project/nano-code/">
       <img src="https://img.shields.io/pypi/v/nano-code.svg">
     </a>
   </p>
 </div>
+
 
 
 
