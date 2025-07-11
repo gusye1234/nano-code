@@ -5,12 +5,12 @@ from ...core.session import Session
 from ...utils.file import is_text_file
 
 
-class WriteFileTool(AgentToolDefine):
+class CreateFileTool(AgentToolDefine):
     @classmethod
     def init(cls, **kwargs):
         return cls(
-            name="write_file",
-            description="""Writes content to a specified file in the local filesystem. You can use this tool to write textual content to a file, including code, text, plans...""",
+            name="create_file",
+            description="""Creates a new file in the local filesystem. You can use this tool to create a new file, including code, text, plans...""",
             parameters_schema={
                 "properties": {
                     "file_path": {
@@ -38,6 +38,13 @@ class WriteFileTool(AgentToolDefine):
                 self.name,
                 f"File {absolute_path} is not within the working directory {session.working_dir}",
             )
+
+        if os.path.exists(absolute_path):
+            return AgentToolReturn.error(
+                self.name,
+                f"File {absolute_path} already exists, use edit_file tool to edit it",
+            )
+
         dir_path = os.path.dirname(absolute_path)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)

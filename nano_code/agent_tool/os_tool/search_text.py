@@ -111,7 +111,7 @@ Can filter files by a glob pattern. Returns the lines containing matches, along 
                             matches.append(
                                 GrepMatch(
                                     file_path=abs_file_path,
-                                    line_number=line_num,
+                                    line_number=line_num + 1,
                                     line=(
                                         line
                                         if len(line) < MAX_LINE_CHAR_LENGTH
@@ -120,7 +120,7 @@ Can filter files by a glob pattern. Returns the lines containing matches, along 
                                     ),
                                     section="\n".join(
                                         [
-                                            f"L{line_i} "
+                                            f"L{line_i+1} "
                                             + (
                                                 l
                                                 if len(l) < MAX_LINE_CHAR_LENGTH

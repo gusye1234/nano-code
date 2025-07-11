@@ -61,10 +61,6 @@ For text files, it can read specific line ranges.""",
             return AgentToolReturn.error(
                 self.name, f"File {absolute_path} is not a file"
             )
-        # if session.ignore_path(absolute_path):
-        #     return AgentToolReturn.error(
-        #         self.name, f"File {absolute_path} is git-ignored"
-        #     )
 
         is_text, mime_type = is_text_file(absolute_path)
         if not is_text:
@@ -86,7 +82,7 @@ For text files, it can read specific line ranges.""",
         actual_start_line_no = min(start_line_no, len(lines))
         actual_end_line_no = max(min(end_line_no, len(lines)), actual_start_line_no)
         read_lines = lines[actual_start_line_no:actual_end_line_no]
-        line_nos = [f"L{i}" for i in range(actual_start_line_no, actual_end_line_no)]
+        line_nos = [f"L{i+1}" for i in range(actual_start_line_no, actual_end_line_no)]
         read_lines = [
             (
                 l

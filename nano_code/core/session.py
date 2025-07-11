@@ -1,5 +1,6 @@
 import os
 import uuid
+import glob
 from hashlib import sha256
 from logging import Logger
 from dataclasses import dataclass, field
@@ -73,10 +74,11 @@ class Session:
     def find_ignore_matchers(self) -> list:
         ignore_files = []
         # Find .gitignore file in the working directory
-        for root, dirs, files in os.walk(self.__project_root):
-            if ".gitignore" in files:
-                ignore_files.append(os.path.join(root, ".gitignore"))
-
+        ignore_files = glob.glob(
+            os.path.join(self.__project_root, "**", ".gitignore"),
+            recursive=True,
+            include_hidden=True,
+        )
         # Parse gitignore rules if found
         ignore_matchers = {os.path.dirname(f): parse_gitignore(f) for f in ignore_files}
         return ignore_matchers
@@ -92,20 +94,15 @@ class Session:
         return os.path.abspath(path).startswith(self.working_dir)
 
     def find_memory_paths(self) -> list[str]:
-        __search_dir = 0
-        memory_contents = []
-        for root, dirs, files in os.walk(self.__project_root):
-            if self.ignore_path(root):
-                self.log(f"Ignoring {root}", level="debug")
-                continue
-            if MEMORY_FILE in files:
-                memory_contents.append(os.path.join(root, MEMORY_FILE))
-
-            __search_dir += 1
-            if __search_dir > self.maximum_search_dir:
-                break
-
-        return memory_contents
+        memory_files = glob.glob(
+            os.path.join(self.__project_root, "**", MEMORY_FILE),
+            recursive=True,
+            include_hidden=True,
+        )
+        not_ignore_memory_files = [
+            m for m in memory_files if not self.ignore_path(os.path.dirname(m))
+        ]
+        return not_ignore_memory_files
 
     def get_memory(self) -> list[str]:
         memory = []
