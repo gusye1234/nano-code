@@ -28,7 +28,7 @@
 
 The project aims to be **small enough to grok in one sitting** yet **powerful enough to be genuinely useful** when navigating or refactoring real-world codebases.
 
----
+
 
 ## ✨ Features
 
@@ -38,8 +38,6 @@ The project aims to be **small enough to grok in one sitting** yet **powerful en
   * `add_tasks` for quick TODO-list capture.
 * 🧠 **Session memory** – every run stores context (working dir, conversation, cost tracking).
 * 🔌 **Pluggable LLM** – ships with an OpenAI client but the design allows dropping in other providers.
-
----
 
 ## 🚀 Installation
 
@@ -94,14 +92,11 @@ Example contents:
 - Any keys matching the Env class (see `nano_code/env.py`) are supported.
 - File-based config takes effect if present, otherwise environment variables are used as fallback.
 
----
-
 ## 🏃‍♀️ Quickstart
 
 ```bash
 uvx nano-code
 ```
----
 
 ## 🗂 Project structure
 
@@ -123,8 +118,6 @@ nano-code/
 └── README.md                  # ← You are here
 ```
 
----
-
 ## 🤝 Contributing
 
 Pull requests are welcome!  The codebase is intentionally small – feel free to add new tools, improve docs or extend test coverage.  For larger changes, please open an issue first to discuss what you would like to change.
@@ -134,8 +127,11 @@ Pull requests are welcome!  The codebase is intentionally small – feel free to
 pytest -q
 ```
 
----
 
 ## 📜 License
 
 This project is licensed under the MIT License.  See `LICENSE` for details.
+
+## Disclaimer
+
+Any git commit that starts with `nc:` is written by nano-code itself.
