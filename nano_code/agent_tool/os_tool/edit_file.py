@@ -68,7 +68,7 @@ For example:
 
     async def _execute(self, session: Session, arguments) -> AgentToolReturn:
         absolute_path = arguments["file_path"]
-        content = arguments["content"].strip()
+        content = arguments["content"].strip("\n")
         start_line = arguments["start_line"]
         end_line = arguments.get("end_line", None)
 
@@ -93,7 +93,7 @@ For example:
             )
 
         with open(absolute_path, "r") as f:
-            lines = f.read().strip()
+            lines = f.read().strip("\n")
             lines = lines.split("\n")
 
         if start_line > len(lines) + 1:

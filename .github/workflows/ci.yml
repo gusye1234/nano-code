@@ -19,4 +19,6 @@ jobs:
       - name: Set up uv environment
         run: uv sync
       - name: Run tests
+        env:
+          OPENAI_API_KEY: 123456
         run: uv run pytest tests

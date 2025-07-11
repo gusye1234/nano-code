@@ -18,10 +18,10 @@ Similar to the Unix 'ls' command.""",
                         "type": "string",
                         "pattern": "^/",
                     },
-                    "show_hidden": {
-                        "description": "Optional: Whether to show hidden files and directories (those starting with '.'). Defaults to False.",
-                        "type": "boolean",
-                    },
+                    # "show_hidden": {
+                    #     "description": "Optional: Whether to show hidden files and directories (those starting with '.'). Defaults to False.",
+                    #     "type": "boolean",
+                    # },
                     # "show_details": {
                     #     "description": "Optional: Whether to show detailed information like file size, permissions, and modification time. Defaults to False.",
                     #     "type": "boolean",
@@ -35,7 +35,7 @@ Similar to the Unix 'ls' command.""",
     async def _execute(self, session: Session, arguments) -> AgentToolReturn:
         absolute_path = arguments["absolute_path"]
         absolute_path = os.path.abspath(absolute_path)
-        show_hidden = arguments.get("show_hidden", False)
+        show_hidden = True
         # show_details = arguments.get("show_details", False)
 
         if not session.path_within_root(absolute_path):
