@@ -105,7 +105,6 @@ For example:
         edit_range = f"L{start_line}{f'-{end_line}' if end_line else ''}"
         if end_line is None:
             # inserting
-            print("inserting", start_line, content, lines)
             lines.insert(start_line - 1, content)
             action = "INSERT"
         elif content == "":

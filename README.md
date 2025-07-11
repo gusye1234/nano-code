@@ -20,8 +20,7 @@
 
 
 
-
-`nano-code` is a **tiny, batteries-included code-assistant framework** written in Python 3.11+.  Inspired by Google’s *Gemini Code* demo, it lets you spin up an interactive CLI agent powered by OpenAI (or any compatible) LLM and a growing toolbox of actions such as reading files, listing directories, searching text and more.
+`nano-code` is a **tiny, batteries-included code-assistant** written in Python.  Inspired by Google’s *Gemini Code*, it lets you spin up an interactive CLI agent powered by OpenAI (or any compatible) LLM and a growing toolbox of actions such as reading files, listing directories, searching text and more.
 
 The project aims to be **small enough to grok in one sitting** yet **powerful enough to be genuinely useful** when navigating or refactoring real-world codebases.
 
@@ -29,13 +28,12 @@ The project aims to be **small enough to grok in one sitting** yet **powerful en
 
 ## ✨ Features
 
-* ⚡ **Single-file CLI** – run `nano-code` and start chatting immediately.
-* 🛠 **Agent Tools API** – easily add new tools.  Out-of-the-box you get:
+* ⚡ **Agent CLI** – run `nano-code` and start chatting immediately.
+* 🛠 **Basic Tools** – easily add new tools.  Out-of-the-box you get:
   * `list_dir`, `find_files`, `read_file`, `write_file`, `search_text` …
   * `add_tasks` for quick TODO-list capture.
 * 🧠 **Session memory** – every run stores context (working dir, conversation, cost tracking).
 * 🔌 **Pluggable LLM** – ships with an OpenAI client but the design allows dropping in other providers.
-* 🧪 **Pytest suite** – examples for how to test agents & tools.
 
 ---
 
@@ -64,6 +62,33 @@ export OPENAI_API_KEY="sk-..."
 # Optional – point to an OpenAI-compatible endpoint
 export LLM_BASE_URL="https://api.openai.com/v1"
 ```
+
+## ⚙️ Configuration
+
+nano-code supports configuration via environment variables and an optional config file. You must provide an OpenAI-compatible API key, and can customize the LLM endpoint or other defaults if desired.
+
+### Option 1: Environment variables (recommended for quickstart)
+
+### Option 2: config.json file
+
+You can optionally create a config file at:
+
+```
+~/.nano_code/config.json
+```
+
+Where `~` is your home directory (e.g., `/home/yourname/.nano_code/config.json` on Linux/macOS, or `C:\Users\yourname\.nano_code\config.json` on Windows).
+
+Example contents:
+```json
+{
+  "llm_api_key": "sk-...",
+  "llm_base_url": "https://api.openai.com/v1",
+  "llm_main_model": "gpt-4.1"
+}
+```
+- Any keys matching the Env class (see `nano_code/env.py`) are supported.
+- File-based config takes effect if present, otherwise environment variables are used as fallback.
 
 ---
 

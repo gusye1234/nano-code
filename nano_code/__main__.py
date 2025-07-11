@@ -50,6 +50,7 @@ There are few rules:
 - Always examine if you have accomplished the tasks before you stop, if not, continue to try. If yes, report to me with your recap.
 - Always tell me your brief plan before you call tools, but don't wait for my approval unless you're required to do so in some specific cases.
 - When your plan failed, try to fix it by yourself instead of stopping trying.
+- The files you read before maybe updated, make sure you read the latest version before you edit them.
 {memories}
 """,
             tools=OS_TOOLS.get_schemas(),
