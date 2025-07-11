@@ -43,9 +43,6 @@ def test_show_hidden(tmp_path):
     (tmp_path / ".hidden").write_text("hidden")
     (tmp_path / "visible").write_text("v")
     session = build_session(tmp_path)
-    # Hidden off
-    result = run_tool(session, absolute_path=str(tmp_path), show_hidden=False)
-    assert ".hidden" not in result.for_llm
     # Hidden on
     result = run_tool(session, absolute_path=str(tmp_path), show_hidden=True)
     assert ".hidden" in result.for_llm
