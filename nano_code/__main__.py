@@ -12,7 +12,6 @@ from .utils.logger import AIConsoleLogger
 
 
 async def agent_loop(session: Session, CONSOLE: Console):
-
     code_memories = session.get_memory()
     memories = (
         f"""Below are some working memories:

@@ -32,7 +32,7 @@ def test_is_text_file_unknown_extension():
     is_text, label = file_utils.is_text_file(tf.name)
     os.unlink(tf.name)
     # Could be False or True depending on MIME, don't assert value
-assert isinstance(label, (str, type(None)))
+    assert isinstance(label, (str, type(None)))
 
 def test_is_text_file_special():
     # Should recognize .gitignore as a text file even if not existing

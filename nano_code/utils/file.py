@@ -35,6 +35,10 @@ TEXT_EXT = {
 }
 SPECIAL_FILE_NAME = {
     ".gitignore",
+    ".coveragerc",
+    ".env",
+    ".env.local",
+    ".env.development",
 }
 
 
@@ -50,10 +54,10 @@ def get_filename(file_path: str):
     return os.path.basename(file_path)
 
 
-def is_text_file(file_path: str) -> tuple[bool, str]:
+def is_text_file(file_path: str) -> tuple[bool, str | None]:
     """
     Use python-magic to determine if a file is text-based
-    Returns: (is_text, mime_type)
+    Returns: (is_text, label/mime_type/extension)
     """
     # Get MIME type
     ext = get_file_extname(file_path)
@@ -65,7 +69,8 @@ def is_text_file(file_path: str) -> tuple[bool, str]:
         file_name = get_filename(file_path)
         if file_name in SPECIAL_FILE_NAME:
             return True, file_name
-    # Special case: unknown extension, try decoding
+        # No mime and no special file, return False, None
+        return False, None
     # Text file patterns
     text_mime_types = [
         "text/",
