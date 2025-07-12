@@ -31,7 +31,7 @@ class Env:
     llm_default_query: str = None
     llm_default_header: str = None
 
-    llm_main_model: str = "gpt-4.1"
+    llm_main_model: str = os.getenv("LLM_MAIN_MODEL", "gpt-4.1")
 
     def __post_init__(self):
         if not self.llm_api_key:
