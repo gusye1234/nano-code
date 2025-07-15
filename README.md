@@ -42,7 +42,7 @@ The project aims to be **small enough to grok in one sitting** yet **powerful en
 
 
 ### Built-in Tools
-- **File Operations**: `list_dir`, `find_files`, `read_file`, `write_file`, `edit_file`, `mv_file_or_dir`
+- **File Operations**: `list_dir`, `find_files`, `read_file`, `create_file`, `edit_file`, `mv_file_or_dir`
 - **Search & Analysis**: `search_text` with regex support
 - **Task Management**: `add_tasks` for quick TODO capture
 - **Easy Extensibility**: Simple plugin system for custom tools
@@ -142,20 +142,48 @@ nano-code
 
 ```
 nano-code/
-├── nano_code/                 # Core library package
-│   ├── agent/                 # Agent implementations
-│   ├── agent_tool/            # Tool system
-│   │   ├── os_tool/           # Filesystem operations
-│   │   └── util_tool/         # Utility functions
-│   ├── core/                  # Session & memory management
-│   ├── llm/                   # LLM integrations
-│   ├── utils/                 # Shared utilities
-│   ├── constants.py           # Configuration constants
-│   ├── env.py                 # Environment configuration
-│   └── __main__.py            # CLI entry point
-├── tests/                     # Comprehensive test suite
-├── pyproject.toml             # Project configuration
-└── README.md                  # Documentation
+├── nano_code/                  # Core library and agent code
+│   ├── __init__.py             # Package marker, version
+│   ├── __main__.py             # Main entrypoint, interactive console agent
+│   ├── constants.py            # Global constants (paths, file limits, names)
+│   ├── env.py                  # Loads/holds environment configs (API keys, models)
+│   ├── utils/                  # General utility functions
+│   │   ├── file.py             # Helpers for file type checks/extensions/MIME
+│   │   ├── logger.py           # Logging utility (session and console)
+│   │   ├── paths.py            # Finds the git repository root upwards from a dir
+│   │   └── tokens.py           # Token counting/truncation utilities (tiktoken)
+│   ├── core/                   # Session, checkpoints, and memory management
+│   │   ├── cost.py             # Records/checkpoints LLM/tool usage/errors
+│   │   └── session.py          # Session context: cwd, logging, ignores, memory, etc.
+│   ├── llm/                    # Language model and API interaction
+│   │   ├── __init__.py         # Unified LLM API interface and orchestration
+│   │   ├── openai_model.py     # Direct async OpenAI chat completion implementation
+│   │   └── clients.py          # OpenAI async client factory/caching
+│   ├── agent_tool/             # Pluggable agent tools for OS & utility ops
+│   │   ├── __init__.py         # Package marker
+│   │   ├── base.py             # Abstract classes/base models for agent tools
+│   │   ├── registry.py         # Tool registry for lookup and execution
+│   │   ├── tool_schema.py      # Custom schema validator for tool argument checks
+│   │   ├── tools.py            # Registers/organizes sets of OS/util tools
+│   │   ├── os_tool/            # Tools for filesystem/search actions
+│   │   │   ├── __init__.py
+│   │   │   ├── create_file.py  # Tool: Write a new file with content
+│   │   │   ├── edit_file.py    # Tool: Edit file's lines (replace/insert/delete)
+│   │   │   ├── find_files.py   # Tool: Find files by glob, respect ignore, sort by mtime
+│   │   │   ├── list_dir.py     # Tool: List a directory's contents
+│   │   │   ├── mv_file_or_dir.py  # Tool: Move or rename files or directories
+│   │   │   ├── read_file.py    # Tool: Read text file content (by lines), safe + annotated
+│   │   │   └── search_text.py  # Tool: Search regex in files, return line context
+│   │   └── util_tool/          # Utility tools
+│   │       └── add_tasks.py    # Tool: Parse markdown checkboxes to a global todo-list
+│   └── agent/                  # (Placeholder for non-interactive agent logic)
+│       └── non_interactive_agent.py   # Reserved for future non-interactive agent implementation
+│
+├── tests/                      # Pytest test suite for agent tools/helpers
+├── assets/                     # Project assets (logo, etc.)
+├── .github/                    # GitHub configuration files
+├── pyproject.toml             # Project configuration and dependencies
+└── README.md                  # This file - Project documentation
 ```
 
 ### Key Components
