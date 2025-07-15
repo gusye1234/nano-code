@@ -41,7 +41,7 @@ class AgentToolDefine(BaseModel, ABC):
                 "description": self.description,
                 "parameters": self.parameters_schema,
             },
-            "strict": True,
+            # "strict": True,
         }
 
     @classmethod
