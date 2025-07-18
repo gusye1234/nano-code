@@ -79,6 +79,7 @@ There are few rules:
                 )
             continue
         CONSOLE.print(Panel(M(response.message.content), title="Assistant"))
+        messages.append(response.message.model_dump())
         wait_user = True
 
 

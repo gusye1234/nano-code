@@ -204,4 +204,5 @@ class Session:
                     ],
                 },
                 f,
+                ensure_ascii=False,
             )
