@@ -9,6 +9,8 @@ from .os_tool import (
     mv_file_or_dir,
 )
 from .util_tool import add_tasks
+from .Pyhton_Tool.ManageDependencies import ManageDependenciesTool
+from .Pyhton_Tool.RunCommand import RunCommandTool
 
 OS_TOOLS = ToolRegistry()
 OS_TOOLS.add_tools(
@@ -28,5 +30,14 @@ UTIL_TOOLS = ToolRegistry()
 UTIL_TOOLS.add_tools(
     [
         add_tasks.AddTasksTool.init(),
+    ]
+)
+
+
+PYTHON_TOOLS = ToolRegistry()
+PYTHON_TOOLS.add_tools(
+    [
+        ManageDependenciesTool.init(),
+        RunCommandTool.init(),
     ]
 )

@@ -1,0 +1,41 @@
+FROM python:3.11-slim
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    git \
+    locales \
+    && rm -rf /var/lib/apt/lists/* \
+    && locale-gen en_US.UTF-8
+
+# 创建非root用户
+RUN useradd -m -u 1000 sandboxuser
+
+# 安装nano-code和依赖
+COPY pyproject.toml uv.lock* README.md ./
+RUN pip install uv && \
+    uv pip install --system -e .
+
+# 复制nano-code源码到容器
+COPY nano_code/ /app/nano_code/
+RUN chmod -R 755 /app/
+
+# 创建工作目录结构
+RUN mkdir -p /workspace/input /workspace/output /workspace/temp && \
+    chown -R sandboxuser:sandboxuser /workspace
+
+# 切换到非root用户
+USER sandboxuser
+
+# 设置工作目录
+WORKDIR /workspace
+
+# 设置Python路径
+ENV PYTHONPATH=/app
+
+# 设置locale环境
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# 启动nano-code
+ENTRYPOINT ["python3", "-m", "nano_code"]

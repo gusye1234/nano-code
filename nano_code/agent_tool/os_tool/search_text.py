@@ -27,7 +27,7 @@ Can filter files by a glob pattern. Returns the lines containing matches, along 
             parameters_schema={
                 "properties": {
                     "pattern": {
-                        "description": "The regular expression (regex) pattern to search for within file contents (e.g., 'function\\s+myFunction', 'import\\s+\\{.*\\}\\s+from\\s+.*').",
+                        "description": "The regular expression (regex) pattern to search for within Python files (e.g., 'def\\s+\\w+', 'import\\s+\\w+', 'class\\s+\\w+').",
                         "type": "string",
                     },
                     "path": {
@@ -35,7 +35,7 @@ Can filter files by a glob pattern. Returns the lines containing matches, along 
                         "type": "string",
                     },
                     "include": {
-                        "description": "Optional: A glob pattern to filter which files are searched (e.g., '*.js', '*.{ts,tsx}', 'src/**'). If omitted, searches all files (respecting potential global ignores).",
+                        "description": "Optional: A glob pattern to filter which files are searched (e.g., '*.py', '*.{json,yaml}', 'src/**'). If omitted, searches all files (respecting potential global ignores).",
                         "type": "string",
                     },
                     "max_matches": {

@@ -12,8 +12,8 @@ class FindFilesTool(AgentToolDefine):
     def init(cls, **kwargs):
         return cls(
             name="find_files",
-            description="""Efficiently finds files matching specific glob patterns (e.g., `src/**/*.ts`, `**/*.md`), returning absolute paths sorted by modification time (newest first). 
-Ideal for quickly locating files based on their name or path structure, especially in large codebases.""",
+            description="""Efficiently finds Python-related files matching specific glob patterns (e.g., `**/*.py`, `**/*.json`, `**/*.yaml`), returning absolute paths sorted by modification time (newest first). 
+Ideal for quickly locating Python source files, data files, and configuration files.""",
             parameters_schema={
                 "properties": {
                     "pattern": {

@@ -18,6 +18,28 @@ async def openai_complete(
     if system_prompt:
         messages.insert(0, {"role": "system", "content": system_prompt})
 
+    # UTF-8错误检查和清理
+    try:
+        from ..utils.utf8_debugger import debug_utf8_error_simple, clean_utf8_data
+        
+        # 检查并报告UTF-8错误
+        debug_utf8_error_simple(messages, "API_messages")
+        if system_prompt:
+            debug_utf8_error_simple(system_prompt, "system_prompt")
+        if tools:
+            debug_utf8_error_simple(tools, "tools")
+        
+        # 清理UTF-8问题
+        messages = clean_utf8_data(messages)
+        if system_prompt:
+            system_prompt = clean_utf8_data(system_prompt)
+        if tools:
+            tools = clean_utf8_data(tools)
+            
+    except Exception as e:
+        print(f"UTF-8处理出错: {e}")
+        pass  # 调试失败不影响主流程
+    
     _start = asyncio.get_event_loop().time()
     response: ChatCompletion = await openai_async_client.chat.completions.create(
         model=model,

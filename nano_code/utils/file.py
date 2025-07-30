@@ -4,41 +4,27 @@ import mimetypes
 mimetypes.init()
 
 TEXT_EXT = {
-    ".md",
-    ".txt",
-    ".py",
-    ".js",
-    ".css",
-    ".go",
-    ".java",
-    ".php",
-    ".rb",
-    ".rs",
-    ".swift",
-    ".ts",
-    ".tsx",
-    ".jsx",
-    ".html",
-    ".json",
-    ".yaml",
-    ".yml",
-    ".toml",
-    ".ini",
-    ".conf",
-    ".cfg",
-    ".log",
-    ".csv",
-    ".tsv",
-    ".xml",
-    ".sql",
-    ".mdx",
+    ".py",      # Python源码
+    ".txt",     # 文本文件
+    ".csv",     # CSV数据文件
+    ".json",    # JSON数据文件
+    ".yaml",    # YAML配置文件
+    ".yml",     # YAML配置文件
+    ".toml",    # TOML配置文件（Python项目常用）
+    ".ini",     # INI配置文件
+    ".conf",    # 配置文件
+    ".cfg",     # 配置文件
+    ".log",     # 日志文件
+    ".md",      # Markdown文档
 }
 SPECIAL_FILE_NAME = {
-    ".gitignore",
-    ".coveragerc",
-    ".env",
-    ".env.local",
-    ".env.development",
+    ".gitignore",     # Git忽略文件
+    ".coveragerc",    # Python测试覆盖率配置
+    ".env",           # 环境变量文件
+    "requirements.txt", # Python依赖文件
+    "setup.py",       # Python安装脚本
+    "setup.cfg",      # Python配置
+    "pyproject.toml", # Python项目配置
 }
 
 
@@ -71,14 +57,12 @@ def is_text_file(file_path: str) -> tuple[bool, str | None]:
             return True, file_name
         # No mime and no special file, return False, None
         return False, None
-    # Text file patterns
+    # Python相关的MIME类型
     text_mime_types = [
         "text/",
         "application/json",
-        "application/xml",
-        "application/javascript",
-        "application/x-sh",
         "application/x-python",
+        "text/x-python",
     ]
 
     is_text = any(mime_type.startswith(pattern) for pattern in text_mime_types)
@@ -87,8 +71,7 @@ def is_text_file(file_path: str) -> tuple[bool, str | None]:
 
 
 if __name__ == "__main__":
-    print(
-        is_text_file(
-            "/Users/gustavoye/Desktop/learn_w/daytona/apps/api/src/app.module.ts"
-        )
-    )
+    # 测试Python文件检测
+    print(is_text_file("example.py"))
+    print(is_text_file("data.csv"))
+    print(is_text_file("config.json"))

@@ -11,7 +11,7 @@ class ReadFileTool(AgentToolDefine):
         return cls(
             name="read_file",
             description="""Reads and returns the content of a specified file with line annotations from the local filesystem. 
-ONLY handles text files(e.g. .txt, .md, .py, .js, .css, .html, .json, .yaml...). 
+ONLY handles Python-related text files (e.g. .py, .txt, .csv, .json, .yaml, .toml, .ini, .log, .md...). 
 For text files, it can read specific line ranges.""",
             parameters_schema={
                 "properties": {
