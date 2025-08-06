@@ -1,0 +1,12 @@
+[run]
+branch = True
+source =
+    nano_code
+
+[report]
+omit =
+    */tests/*
+    nano_code/agent/*
+
+show_missing = True
+skip_covered = True
