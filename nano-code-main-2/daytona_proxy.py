@@ -21,7 +21,7 @@ class NanoCodeProxy:
         signal.signal(signal.SIGTERM, self._cleanup_and_exit)
     
     def setup_daytona(self):    #创建Daytona沙盒 设置API
-        api_key = "daytona-key-here"
+        api_key = "dtn_6a9223aba4abbd47a0ed89e4c8ee8cae1d6237abe658246ca1f66c2a83d58179"
         api_url = "https://app.daytona.io/api"
         
         config = DaytonaConfig(api_key=api_key, api_url=api_url)
