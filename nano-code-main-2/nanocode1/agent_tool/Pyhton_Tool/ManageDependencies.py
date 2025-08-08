@@ -99,13 +99,13 @@ Examples:
             )
     
     def _venv_exists(self, venv_dir: str) -> bool:
-        """检查虚拟环境是否存在"""
+
         venv_python = os.path.join(venv_dir, 'bin', 'python')
         venv_pip = os.path.join(venv_dir, 'bin', 'pip')
         return os.path.exists(venv_python) and os.path.exists(venv_pip)
     
     async def _ensure_venv(self, working_dir: str) -> bool:
-        """确保虚拟环境存在"""
+
         venv_dir = os.path.join(working_dir, 'venv')
         
         if not self._venv_exists(venv_dir):
@@ -126,7 +126,7 @@ Examples:
         return True
     
     async def _is_package_installed(self, package: str, working_dir: str) -> bool:
-        """检查包是否在虚拟环境中已安装"""
+
         try:
             venv_dir = os.path.join(working_dir, 'venv')
             if not self._venv_exists(venv_dir):
@@ -149,7 +149,7 @@ Examples:
             return False
     
     async def _install_packages(self, packages: list, working_dir: str) -> dict:
-        """在虚拟环境中安装包"""
+
         try:
             venv_dir = os.path.join(working_dir, 'venv')
             if not self._venv_exists(venv_dir):

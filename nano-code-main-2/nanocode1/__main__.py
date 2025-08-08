@@ -2,7 +2,6 @@ import os
 import sys
 import asyncio
 import argparse
-from rich.console import Console
 from .agent.non_interactive_agent import run_non_interactive_task
 
 
@@ -44,12 +43,7 @@ def parse_args():
     return parser.parse_args()
 
 async def run_batch_mode(args):
-    """运行批处理模式"""
-    print(f"🚀 nano-code ")
-    print(f"📋 任务: {args.task}")
-    if args.files:
-        print(f"📁 输入文件: {len(args.files)} 个")
-    
+
     try:
         result = await run_non_interactive_task(
             task_description=args.task,

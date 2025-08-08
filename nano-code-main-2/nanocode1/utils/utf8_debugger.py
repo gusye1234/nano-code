@@ -1,6 +1,3 @@
-"""
-精简版UTF-8编码问题调试工具 - 只在有错误时输出
-"""
 
 def debug_utf8_error_simple(data, location="unknown"):
     """

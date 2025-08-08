@@ -173,6 +173,8 @@ class NanoCodeProxy:
                 print(f"⚠️  设置命令失败: {cmd}")
     
     def start_nano_code_batch(self, task_description: str, input_files: list = None):#启动nano code
+        # 自动在任务描述后添加生成总结的要求
+        enhanced_task = f"{task_description}。完成分析后，请创建一个详细的总结报告文件(summary.txt)，包含：1.数据概览 2.关键发现 3.分析结果 4.结论建议, 同时对于通过python代码实现的产出，保留python代码"
         print(f"🚀 任务描述: {task_description}")
         
         # 1. 上传输入文件到input目录
@@ -180,15 +182,12 @@ class NanoCodeProxy:
         if input_files:
             remote_files = self.upload_files(input_files)
         
-        # 2. 获取API配置
         api_key, base_url = self._get_api_config()
         
-        # 3. 创建会话并设置安全工作区
         session_id = "nano-code-secure-session"
         try:
             self.sandbox.process.create_session(session_id)
             
-            # 设置安全工作区
             self._setup_secure_workspace(session_id)
             
             tmp_files = []
@@ -205,15 +204,12 @@ class NanoCodeProxy:
                     else:
                         print(f"⚠️  复制失败: {filename}")
             
-            # 构建执行命令 (在tmp目录中运行AI)
-            batch_cmd = f'cd /workspace/tmp && OPENAI_API_KEY="{api_key}" LLM_BASE_URL="{base_url}" PYTHONPATH="/workspace/system:$PYTHONPATH" python -m nanocode1 --task "{task_description}" --working-dir /workspace/tmp --max-iterations {self.max_iterations}'
+            batch_cmd = f'cd /workspace/tmp && OPENAI_API_KEY="{api_key}" LLM_BASE_URL="{base_url}" PYTHONPATH="/workspace/system:$PYTHONPATH" python -m nanocode1 --task "{enhanced_task}" --working-dir /workspace/tmp --max-iterations {self.max_iterations}'
             
             if tmp_files:
                 # 使用tmp目录中的文件
                 input_files_str = " ".join(tmp_files)
                 batch_cmd += f' --files {input_files_str}'
-            
-            print(f"🔧执行命令: {batch_cmd}")
             
             # 执行任务（
             req = SessionExecuteRequest(command=batch_cmd)
@@ -230,16 +226,16 @@ class NanoCodeProxy:
             else:
                 print("✅ 任务执行成功")
             
-            # 检查和收集输出文件 (传入输入文件名以便过滤)
+
             input_filenames = [f.split('/')[-1] for f in tmp_files] if tmp_files else []
 
             self._collect_output_files(session_id, input_filenames)
             
-            # 下载结果文件
+
             downloaded_files = self.download_results(session_id)
             
             if downloaded_files:
-                print(f"🎉 任务完成！共生成 {len(downloaded_files)} 个结果文件")
+                print(f"🎉 任务完成！共生成 {len(downloaded_files)} 个文件")
                 print("📁 结果文件已下载到: ~/Desktop/SandboxWork/download/")
             else:
                 print("🎉 任务完成！")
@@ -258,39 +254,37 @@ class NanoCodeProxy:
     def _collect_output_files(self, session_id: str, input_filenames: list = None): #筛选download文件
         print("📦 收集输出文件...")
         
-        # 只查找tmp目录根目录的文件，排除Python包和虚拟环境
-        find_cmd = "find /workspace/tmp -maxdepth 1 -type f 2>/dev/null"
+        find_cmd = "find /workspace/tmp -type f -not -path '*/.*' -not -path '*/__pycache__/*' -not -path '*/venv/*' 2>/dev/null"
         req = SessionExecuteRequest(command=find_cmd)
         result = self.sandbox.process.execute_session_command(session_id, req)
         
         if result.output.strip():
             all_files = result.output.strip().split('\n')
             
-            # 过滤掉输入文件和系统文件，只保留AI创建的输出文件
             input_filenames = input_filenames or []
             ai_generated_files = []
             
-            # 需要排除的文件模式
             exclude_patterns = [
-                '.pyc',           # Python字节码
-                '__pycache__',    # Python缓存目录
-                'venv',           # 虚拟环境
-                '.git',           # Git文件
-                '.DS_Store',      # macOS系统文件
-                'pip-log.txt',    # pip日志
-                'pip-delete-this-directory.txt',  # pip临时文件
+                '.pyc',           
+                '__pycache__',    
+                'venv',           
+                '.git',          
+                '.DS_Store',     
+                'pip-log.txt',    
+                'pip-delete-this-directory.txt',  
+                '.gitignore',    
+                'requirements.txt' 
             ]
+            
             
             for file_path in all_files:
                 file_path = file_path.strip()
                 if file_path:
                     filename = file_path.split('/')[-1]
                     
-                    # 排除输入文件
                     if filename in input_filenames:
                         continue
                     
-                    # 排除系统和包管理文件
                     should_exclude = False
                     for pattern in exclude_patterns:
                         if pattern in filename or pattern in file_path:
@@ -301,31 +295,30 @@ class NanoCodeProxy:
                         ai_generated_files.append(file_path)
             
             if ai_generated_files:
-                print(f"🔍 发现 {len(ai_generated_files)} 个AI生成的文件")
+                print(f"🔍 发现 {len(ai_generated_files)} 个生成文件")
+            
                 
-                # 移动AI生成的文件到download目录
                 moved_count = 0
                 for file_path in ai_generated_files:
                     filename = file_path.split('/')[-1]
                     download_path = f"/workspace/download/{filename}"
                     
-                    # 移动文件
                     move_cmd = f"mv '{file_path}' '{download_path}'"
                     req = SessionExecuteRequest(command=move_cmd)
                     move_result = self.sandbox.process.execute_session_command(session_id, req)
                     
                     if move_result.exit_code == 0:
-                        print(f"✅ 收集AI生成文件: {filename}")
+                        print(f"✅ 收集生成文件: {filename}")
                         moved_count += 1
                     else:
                         print(f"⚠️  收集失败: {filename}")
                 
                 if moved_count > 0:
-                    print(f"📁 成功收集 {moved_count} 个AI输出文件到 /workspace/download/")
+                    print(f"📁 成功收集 {moved_count} 个输出文件到 /workspace/download/")
                 else:
                     print("⚠️  未能收集到任何输出文件")
             else:
-                print("📁 未发现AI新创建的文件")
+                print("📁 未发现新创建的文件")
         else:
             print("📁 tmp目录中未发现文件")
     
@@ -363,16 +356,8 @@ def main():
             print("   python3 daytona_proxy.py \"分析这个数据文件\" data.csv")
             print("   python3 daytona_proxy.py \"检查代码质量\" script.py")
             print("   python3 daytona_proxy.py \"处理多个文件\" file1.csv file2.json")
-            print("")
-            print("🔄 文件处理流程:")
-            print("   1. 本地文件自动上传到沙盒")
-            print("   2. 在沙盒中执行任务处理")
-            print("   3. 结果文件自动下载到 ~/Desktop/SandboxWork/download/")
-            print("=" * 60)
             sys.exit(0)
         
-
-
         task_description = sys.argv[1]
         input_files = sys.argv[2:] if len(sys.argv) > 2 else None
         

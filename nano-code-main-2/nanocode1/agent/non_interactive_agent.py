@@ -21,7 +21,7 @@ class NonInteractiveAgent:
         self.all_tools = OS_TOOLS.merge(UTIL_TOOLS).merge(PYTHON_TOOLS)
         self.execution_log = []
     
-    async def execute_task(self, task_description: str, input_files: List[str] = None, max_iterations: int = 10) -> Dict[str, Any]:#执行要求任务
+    async def execute_task(self, task_description: str, input_files: List[str] = None, max_iterations: int = 20) -> Dict[str, Any]:#执行要求任务
         self.console.print(f"🎯 开始执行任务: {task_description}")
         
         # 验证输入文件
