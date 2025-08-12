@@ -1,0 +1,117 @@
+ 📋 nanocode1 代码限制与约束分析
+
+  🔒 核心安全限制
+
+  1. 工作路径限制
+
+  - 约束位置: core/session.py:116-117
+  - 实现: path_within_root() 方法
+  - 限制内容: 所有文件操作必须在 working_dir 及其子目录内
+  - 影响工具: 几乎所有 OS 工具都有此限制
+
+  def path_within_root(self, path: str) -> bool:
+      return os.path.abspath(path).startswith(self.working_dir)
+
+  2. 搜索目录数量限制
+
+  - 限制值: maximum_search_dir = 1000
+  - 作用: 防止在大型项目中无限遍历目录
+  - 触发条件: os.walk() 遍历超过1000个目录时停止
+
+  📊 性能和资源限制
+
+  3. Token 窗口限制
+
+  maximum_token_window_size: int = 32000  # session.py:37
+  - 作用: LLM 上下文长度限制
+  - 处理: 自动截断超长消息历史
+
+  4. 文件读取限制
+
+  # constants.py
+  MAX_READ_FILE_LINES = 2000        # 最大读取行数
+  MAX_LINE_CHAR_LENGTH = 2000       # 单行最大字符数
+  MAX_FOR_LLM_TOOL_RETURN_TOKENS = 1600  # 工具返回给LLM的最大token
+
+  🛠️ 各工具具体限制
+
+  OS工具 (os_tool/)
+
+  文件读取工具 (read_file.py):
+  - ✅ 路径限制: 必须在working_dir内
+  - ✅ 行数限制: 默认200行，最大2000行
+  - ✅ 字符限制: 单行超过2000字符会截断
+  - ✅ 分页支持: offset + limit 参数
+
+  文件创建工具 (create_file.py):
+  - ✅ 路径限制: 必须在working_dir内
+  - ✅ 覆盖检查: 文件已存在时报错
+  - ✅ 权限检查: 检查目录写权限
+
+  文件编辑工具 (edit_file.py):
+  - ✅ 路径限制: 必须在working_dir内
+  - ✅ 存在检查: 文件必须已存在
+  - ✅ 备份机制: 编辑前创建备份
+
+  搜索工具 (search_text.py):
+  - ✅ 路径限制: 搜索路径必须在working_dir内
+  - ✅ 行数限制: 最大读取2000行
+  - ✅ 字符限制: 长行会截断显示
+
+  目录操作 (list_dir.py, find_files.py):
+  - ✅ 路径限制: 必须在working_dir内
+  - ✅ 深度限制: 受maximum_search_dir限制
+
+  移动工具 (mv_file_or_dir.py):
+  - ✅ 源路径限制: 必须在working_dir内
+  - ✅ 目标路径限制: 必须在working_dir内
+  - ✅ 双重检查: 源和目标都验证
+
+  Python工具 (Pyhton_Tool/)
+
+  命令执行 (RunCommand.py):
+  - ✅ 输出截断: 超过1600 token截断
+  - ✅ 虚拟环境: 强制在项目venv中执行
+  - ✅ 工作目录: 在session.working_dir执行
+
+  依赖管理 (ManageDependencies.py):
+  - ✅ venv限制: 只在项目虚拟环境中安装
+  - ✅ 路径限制: venv创建在working_dir/venv
+
+  Git工具 (git_tool/)
+
+  仓库分析 (analyze_repo.py):
+  - ✅ 文件数限制: max_files参数，默认100个文件
+  - ✅ 路径验证: 检查是否为有效Git仓库
+  - ✅ 安全过滤: 跳过隐藏文件和目录
+
+  仓库克隆 (clone_repo.py):
+  - ✅ 目标目录限制: 只能克隆到working_dir/repos/下
+  - ✅ 浅克隆: --depth 1 限制历史
+  - ✅ 覆盖检查: 目录已存在时报错
+
+  🎯 工具返回值限制
+
+  所有工具共同限制 (agent_tool/base.py:75):
+  r.for_llm = truncate_text(r.for_llm, MAX_FOR_LLM_TOOL_RETURN_TOKENS)
+  - 工具返回给LLM的内容最大1600 tokens
+  - 超出部分自动截断
+
+  📝 总结
+
+  安全等级: 🔐 高度安全
+  - 所有文件操作都限制在指定工作目录内
+  - 防止路径遍历攻击
+  - 资源使用有明确上限
+
+  性能保护: ⚡ 多层限制
+  - 文件大小、行数、字符数都有限制
+  - 目录遍历深度限制
+  - Token使用量控制
+
+  用户体验: 🎯 平衡设计
+  - 支持分页读取大文件
+  - 提供清晰的错误信息
+  - 自动截断但保留关键信息
+
+  这些限制确保了 nanocode1 在自主执行时既安全又高效！

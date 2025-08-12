@@ -11,6 +11,8 @@ from .os_tool import (
 from .util_tool import add_tasks
 from .Pyhton_Tool.ManageDependencies import ManageDependenciesTool
 from .Pyhton_Tool.RunCommand import RunCommandTool
+from .git_tool.clone_repo import CloneRepoTool
+from .git_tool.analyze_repo import AnalyzeRepoTool
 
 OS_TOOLS = ToolRegistry()
 OS_TOOLS.add_tools(
@@ -39,5 +41,14 @@ PYTHON_TOOLS.add_tools(
     [
         ManageDependenciesTool.init(),
         RunCommandTool.init(),
+    ]
+)
+
+
+GIT_TOOLS = ToolRegistry()
+GIT_TOOLS.add_tools(
+    [
+        CloneRepoTool.init(),
+        AnalyzeRepoTool.init(),
     ]
 )

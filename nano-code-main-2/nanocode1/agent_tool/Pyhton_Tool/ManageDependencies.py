@@ -1,13 +1,10 @@
-import asyncio
-import subprocess
-import os
-from ...constants import MAX_FOR_LLM_TOOL_RETURN_TOKENS
 from ..base import AgentToolDefine, AgentToolReturn
 from ...core.session import Session
+from .python_executor import PythonExecutor
 
 
 class ManageDependenciesTool(AgentToolDefine):
-    
+
     @classmethod
     def init(cls, **kwargs):
         return cls(
@@ -35,61 +32,43 @@ Examples:
     async def _execute(self, session: Session, arguments) -> AgentToolReturn:
         packages = arguments["packages"]
         
-        session.log(f"Checking and installing packages in virtual environment: {packages}")
+        session.log(f"Managing Python packages: {packages}")
         
         try:
-            missing_packages = []
-            installed_packages = []
+            # 检查包的安装状态
+            installed_packages, missing_packages = await self._check_packages_status(
+                packages, session.working_dir
+            )
             
-            # 确保虚拟环境存在
-            await self._ensure_venv(session.working_dir)
-            
-            # 检查每个包是否已安装
-            for package in packages:
-                if await self._is_package_installed(package, session.working_dir):
-                    installed_packages.append(package)
-                else:
-                    missing_packages.append(package)
-            
-            # 如果有缺失的包，进行安装
+            # 安装缺失的包
+            install_results = []
             if missing_packages:
-                install_result = await self._install_packages(missing_packages, session.working_dir)
+                install_result = await PythonExecutor.install_packages(
+                    missing_packages, session.working_dir
+                )
+                
                 if not install_result["success"]:
                     return AgentToolReturn(
-                        for_llm=f"Failed to install missing packages: {missing_packages}\nError: {install_result['error']}",
-                        for_human=f"Failed to install packages: {', '.join(missing_packages)}"
+                        for_llm=f"Failed to install packages: {missing_packages}\nError: {install_result['stderr']}",
+                        for_human=f"Failed to install: {', '.join(missing_packages)}"
                     )
                 
-                # 重新检查安装结果
-                newly_installed = []
-                still_missing = []
-                for package in missing_packages:
-                    if await self._is_package_installed(package, session.working_dir):
-                        newly_installed.append(package)
-                    else:
-                        still_missing.append(package)
+                # 验证安装结果
+                newly_installed, still_missing = await self._verify_installation(
+                    missing_packages, session.working_dir
+                )
                 
                 if still_missing:
                     return AgentToolReturn(
-                        for_llm=f"Partially successful. Installed: {newly_installed}. Failed: {still_missing}",
-                        for_human=f"Some packages failed to install: {', '.join(still_missing)}"
+                        for_llm=f"Partial success. Installed: {newly_installed}. Failed: {still_missing}",
+                        for_human=f"Some packages failed: {', '.join(still_missing)}"
                     )
+                
+                install_results = newly_installed
             
-            # 构建返回消息
-            messages = []
-            if installed_packages:
-                messages.append(f"Already installed: {', '.join(installed_packages)}")
-            if missing_packages:
-                messages.append(f"Newly installed: {', '.join(missing_packages)}")
-            
-            venv_dir = os.path.join(session.working_dir, 'venv')
-            venv_info = f"Virtual environment: {venv_dir}"
-            
-            return AgentToolReturn(
-                for_llm=f"Package management completed:\n" + "\n".join(messages) + f"\n{venv_info}",
-                for_human=f"Checked {len(packages)} packages. " + 
-                         f"Already installed: {len(installed_packages)}, "
-                         f"Newly installed: {len(missing_packages)}"
+            # 生成成功报告
+            return self._generate_success_report(
+                installed_packages, install_results, session.working_dir
             )
             
         except Exception as e:
@@ -98,85 +77,47 @@ Examples:
                 f"Failed to manage dependencies: {str(e)}"
             )
     
-    def _venv_exists(self, venv_dir: str) -> bool:
-
-        venv_python = os.path.join(venv_dir, 'bin', 'python')
-        venv_pip = os.path.join(venv_dir, 'bin', 'pip')
-        return os.path.exists(venv_python) and os.path.exists(venv_pip)
-    
-    async def _ensure_venv(self, working_dir: str) -> bool:
-
-        venv_dir = os.path.join(working_dir, 'venv')
+    async def _check_packages_status(self, packages: list, working_dir: str) -> tuple:
+        """检查包的安装状态，返回(已安装, 缺失)的包列表"""
+        installed = []
+        missing = []
         
-        if not self._venv_exists(venv_dir):
-            # 创建虚拟环境
-            process = await asyncio.create_subprocess_exec(
-                'python3', '-m', 'venv', venv_dir,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=working_dir
-            )
-            
-            stdout, stderr = await process.communicate()
-            
-            if process.returncode != 0:
-                error_msg = stderr.decode('utf-8', errors='replace') if stderr else stdout.decode('utf-8', errors='replace')
-                raise RuntimeError(f"Failed to create virtual environment: {error_msg}")
-        
-        return True
-    
-    async def _is_package_installed(self, package: str, working_dir: str) -> bool:
-
-        try:
-            venv_dir = os.path.join(working_dir, 'venv')
-            if not self._venv_exists(venv_dir):
-                return False
-            
-            venv_python = os.path.join(venv_dir, 'bin', 'python')
-            
-            # 在虚拟环境中测试导入
-            process = await asyncio.create_subprocess_exec(
-                venv_python, '-c', f'import {package}',
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=working_dir
-            )
-            
-            await process.communicate()
-            return process.returncode == 0
-            
-        except Exception:
-            return False
-    
-    async def _install_packages(self, packages: list, working_dir: str) -> dict:
-
-        try:
-            venv_dir = os.path.join(working_dir, 'venv')
-            if not self._venv_exists(venv_dir):
-                await self._ensure_venv(working_dir)
-            
-            venv_pip = os.path.join(venv_dir, 'bin', 'pip')
-            
-            # 安装包
-            cmd = [venv_pip, 'install'] + packages
-            
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=working_dir
-            )
-            
-            stdout, stderr = await process.communicate()
-            
-            if process.returncode == 0:
-                return {
-                    "success": True, 
-                    "message": f"Successfully installed: {', '.join(packages)}"
-                }
+        for package in packages:
+            if await PythonExecutor.check_package(package, working_dir):
+                installed.append(package)
             else:
-                error_msg = stderr.decode('utf-8', errors='replace') if stderr else stdout.decode('utf-8', errors='replace')
-                return {"success": False, "error": f"Failed to install packages: {error_msg}"}
-                
-        except Exception as e:
-            return {"success": False, "error": f"Exception while installing packages: {str(e)}"}
+                missing.append(package)
+        
+        return installed, missing
+    
+    async def _verify_installation(self, packages: list, working_dir: str) -> tuple:
+        """验证安装结果，返回(成功安装, 仍然缺失)的包列表"""
+        newly_installed = []
+        still_missing = []
+        
+        for package in packages:
+            if await PythonExecutor.check_package(package, working_dir):
+                newly_installed.append(package)
+            else:
+                still_missing.append(package)
+        
+        return newly_installed, still_missing
+    
+    def _generate_success_report(self, installed: list, newly_installed: list, working_dir: str) -> AgentToolReturn:
+        """生成成功报告"""
+        messages = []
+        if installed:
+            messages.append(f"Already installed: {', '.join(installed)}")
+        if newly_installed:
+            messages.append(f"Newly installed: {', '.join(newly_installed)}")
+        
+        total_packages = len(installed) + len(newly_installed)
+        env_info = f"Environment: Daytona container at {working_dir}"
+        
+        llm_content = "Package management completed:\n" + "\n".join(messages) + f"\n{env_info}"
+        
+        return AgentToolReturn(
+            for_llm=llm_content,
+            for_human=f"Managed {total_packages} packages successfully. "
+                     f"Already installed: {len(installed)}, Newly installed: {len(newly_installed)}"
+        )

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 from typing import List, Dict, Any
 from pathlib import Path
 from rich.console import Console
@@ -9,68 +10,75 @@ from rich.markdown import Markdown as M
 
 from ..core.session import Session
 from ..llm import llm_complete
-from ..agent_tool.tools import OS_TOOLS, UTIL_TOOLS, PYTHON_TOOLS
+from ..agent_tool.tools import OS_TOOLS, UTIL_TOOLS, PYTHON_TOOLS, GIT_TOOLS
 from ..utils.logger import AIConsoleLogger
+from ..prompts import SYSTEM_PROMPT, RAW_ANALYSIS_PROMPT
 
 
 class NonInteractiveAgent:
+    """智能Agent - 自动分析用户输入并选择合适的工具执行任务"""
     
     def __init__(self, session: Session, console: Console = None):
         self.session = session
         self.console = console or Console()
-        self.all_tools = OS_TOOLS.merge(UTIL_TOOLS).merge(PYTHON_TOOLS)
+        self.all_tools = OS_TOOLS.merge(UTIL_TOOLS).merge(PYTHON_TOOLS).merge(GIT_TOOLS)
         self.execution_log = []
     
-    async def execute_task(self, task_description: str, input_files: List[str] = None, max_iterations: int = 20) -> Dict[str, Any]:#执行要求任务
-        self.console.print(f"🎯 开始执行任务: {task_description}")
+    
+    async def execute_task_intelligently(self, task_context: dict) -> Dict[str, Any]:
+        """智能任务执行 - Agent自动分析任务上下文并选择工具"""
+        final_task = task_context["final_task"]
         
-        # 验证输入文件
-        if input_files:
-            validated_files = self._validate_input_files(input_files)
-        else:
-            validated_files = []
+        self.console.print(f"🧠 Agent开始智能分析任务...")
         
-        # 根据任务构建初始prompt
-        messages = self._build_initial_messages(task_description, validated_files)
+        # 构建智能分析的初始prompt - 让Agent自己决定使用什么工具
+        messages = self._build_intelligent_messages(final_task)
         
-        # 自主执行循环
-        result = await self._autonomous_execution_loop(messages, max_iterations)
+        # 自主执行循环 - 传递原始用户输入用于prompt选择
+        result = await self._autonomous_execution_loop(messages, final_task)
         
         return result
     
-    def _validate_input_files(self, file_paths: List[str]) -> List[str]: #分析目标文件路径是否存在
+    def _build_intelligent_messages(self, task_input: str, ) -> List[dict]:
+
+        user_message = f"""请分析以下用户输入并自动选择合适的工具执行：
+
+用户输入: {task_input}
+
+你需要自主完成：
+1. 智能分析用户输入，识别Git仓库URL、文件路径、任务类型等
+2. 根据分析结果自动选择并使用合适的工具
+3. 完整执行任务并生成相应的输出文件
+
+开始自主执行任务。"""
+        
+        return [{"role": "user", "content": user_message}]
+    
+    def _is_pure_url_input(self, user_input: str) -> bool:
+        """检测用户输入是否为单纯的URL"""
+        # 去除首尾空格和换行符
+        cleaned_input = user_input.strip()
+        
+        # URL模式匹配 - 支持http和https
+        url_pattern = r'^https?://[^\s]+$'
+        
+        # 检查是否匹配URL模式且没有其他描述文字
+        return re.match(url_pattern, cleaned_input) is not None
+    
+    def _validate_input_files(self, file_paths: List[str]) -> List[str]:
         validated = []
         for path in file_paths:
             file_path = Path(path)
             if file_path.exists():
                 validated.append(str(file_path.absolute()))
-                self.console.print(f"✅ 文件路径为: {path}")
+                self.console.print(f"✅ 文件存在: {path}")
             else:
                 self.console.print(f"⚠️  文件不存在: {path}")
         return validated
     
-    def _build_initial_messages(self, task_description: str, validated_files: List[str]) -> List[dict]: #初始信息 user_message
-        file_list = "\n".join([f"- {f}" for f in validated_files]) if validated_files else "无输入文件"
-        
-        user_message = f"""请执行以下任务:
-
-        Task: {task_description}
-
-        Available Files:
-        {file_list}
-
-        请自主完成整个任务，包括:
-        1. 分析输入文件（如果有）
-        2. 执行必要的处理
-        3. 生成结果文件
-        4. 提供完整的总结报告
-
-        开始执行任务。不要询问任何问题，直接开始执行。
-        """
-        
-        return [{"role": "user", "content": user_message}]
     
-    async def _autonomous_execution_loop(self, messages: List[dict], max_iterations: int) -> Dict[str, Any]: #自动执行循环
+    async def _autonomous_execution_loop(self, messages: List[dict], user_input: str) -> Dict[str, Any]:
+        """智能执行循环 - 根据输入类型选择合适的prompt"""
         iteration = 0
         
         # 获取项目内存
@@ -78,30 +86,27 @@ class NonInteractiveAgent:
         memories = f"""Below are some working memories:
 {code_memories}""" if code_memories else ""
         
-        while iteration < max_iterations:
+        # 根据输入类型选择prompt
+        if self._is_pure_url_input(user_input):
+            selected_prompt = RAW_ANALYSIS_PROMPT
+            self.console.print("🔍 检测到单纯URL输入，使用专业代码架构分析模式")
+        else:
+            selected_prompt = SYSTEM_PROMPT
+            self.console.print("🧠 使用通用智能分析模式")
+        
+        while True:
             iteration += 1
-            self.console.print(f"🔄 执行轮次 {iteration}/{max_iterations}")
+            self.console.print(f"🔄 执行轮次 {iteration}")
             
-            # 调用LLM
+            # 调用LLM - 使用选择的prompt
             response = await llm_complete(
                 self.session,
                 self.session.working_env.llm_main_model,
                 messages,
-                system_prompt=f"""You are an autonomous AI assistant designed to complete tasks using tools.
-Your primary goal is to achieve the user's objective by planning and executing a series of tool calls.
-Your current working directory is {self.session.working_dir}.
-
-There are few rules:
-- Always use absolute path.
-- Line number is 1-based.
-- Act autonomously. Formulate a plan and execute it without asking for my approval or for more details.
-- If a step in your plan fails, analyze the error, revise the plan, and retry.
-- Always examine if you have accomplished the tasks before you stop, if not, continue to try. If yes, report to me with your recap.
-- Always tell me your brief plan before you call tools, but don't wait for my approval.
-- The files you read before maybe updated, make sure you read the latest version before you edit them.
-- When task is completed, provide a comprehensive summary of what was accomplished.
-{memories}
-""",
+                system_prompt=selected_prompt.format(
+                    working_dir=self.session.working_dir,
+                    memories=memories
+                ),
                 tools=self.all_tools.get_schemas(),
             )
             
@@ -165,19 +170,14 @@ There are few rules:
                     "args": json.loads(t.function.arguments),
                     "result": r.for_human
                 })
-        
-        # 达到最大轮次
-        return {
-            "status": "max_iterations_reached",
-            "final_message": "任务未在规定轮次内完成",
-            "iteration": iteration,
-            "execution_log": self.execution_log
-        }
 
 
-async def run_non_interactive_task(task_description: str, input_files: List[str] = None, working_dir: str = None, max_iterations: int = 20):
-    
+async def run_non_interactive_task(user_input: str, working_dir: str = None):
+    """智能任务执行 - Agent自动分析用户输入"""
     console = Console()
+    
+    console.print(f"🧠 智能Agent启动")
+    console.print(f"📝 用户输入: {user_input}")
     
     # 设置工作目录
     if working_dir is None:
@@ -189,13 +189,23 @@ async def run_non_interactive_task(task_description: str, input_files: List[str]
     agent = NonInteractiveAgent(session, console)
     
     try:
-        # 执行任务
-        result = await agent.execute_task(task_description, input_files, max_iterations)
+        console.print("🚀 Agent开始智能分析和执行...")
+        
+        # 构建任务上下文 - 仅使用用户输入
+        task_context = {
+            "final_task": user_input,
+            "input_files": [],  # Agent会自动从用户输入中识别文件
+            "git_repo": None,   # Agent会自动从用户输入中识别Git URL
+            "git_branch": "main"
+        }
+        
+        # Agent自主执行
+        result = await agent.execute_task_intelligently(task_context)
         
         # 显示结果摘要
         console.print(Panel(
             f"状态: {result['status']}\n"
-            f"使用轮次: {result['iteration']}/{max_iterations}\n"
+            f"使用轮次: {result['iteration']}\n"
             f"执行步骤: {len(result['execution_log'])} 个",
             title="📊 任务执行摘要",
             border_style="green" if result['status'] == 'completed' else "yellow"
