@@ -16,7 +16,6 @@ from ..prompts import SYSTEM_PROMPT, RAW_ANALYSIS_PROMPT
 
 
 class NonInteractiveAgent:
-    """智能Agent - 自动分析用户输入并选择合适的工具执行任务"""
     
     def __init__(self, session: Session, console: Console = None):
         self.session = session
@@ -26,7 +25,6 @@ class NonInteractiveAgent:
     
     
     async def execute_task_intelligently(self, task_context: dict) -> Dict[str, Any]:
-        """智能任务执行 - Agent自动分析任务上下文并选择工具"""
         final_task = task_context["final_task"]
         
         self.console.print(f"🧠 Agent开始智能分析任务...")
@@ -39,20 +37,9 @@ class NonInteractiveAgent:
         
         return result
     
-    def _build_intelligent_messages(self, task_input: str, ) -> List[dict]:
-
-        user_message = f"""请分析以下用户输入并自动选择合适的工具执行：
-
-用户输入: {task_input}
-
-你需要自主完成：
-1. 智能分析用户输入，识别Git仓库URL、文件路径、任务类型等
-2. 根据分析结果自动选择并使用合适的工具
-3. 完整执行任务并生成相应的输出文件
-
-开始自主执行任务。"""
-        
-        return [{"role": "user", "content": user_message}]
+    def _build_intelligent_messages(self, task_input: str) -> List[dict]:
+        #修饰用户输入
+        return [{"role": "user", "content": task_input}]
     
     def _is_pure_url_input(self, user_input: str) -> bool:
         """检测用户输入是否为单纯的URL"""
@@ -78,7 +65,6 @@ class NonInteractiveAgent:
     
     
     async def _autonomous_execution_loop(self, messages: List[dict], user_input: str) -> Dict[str, Any]:
-        """智能执行循环 - 根据输入类型选择合适的prompt"""
         iteration = 0
         
         # 获取项目内存
@@ -89,7 +75,7 @@ class NonInteractiveAgent:
         # 根据输入类型选择prompt
         if self._is_pure_url_input(user_input):
             selected_prompt = RAW_ANALYSIS_PROMPT
-            self.console.print("🔍 检测到单纯URL输入，使用专业代码架构分析模式")
+            self.console.print("🔍 仅输入URL，克隆项目并执行初步分析")
         else:
             selected_prompt = SYSTEM_PROMPT
             self.console.print("🧠 使用通用智能分析模式")
@@ -173,7 +159,6 @@ class NonInteractiveAgent:
 
 
 async def run_non_interactive_task(user_input: str, working_dir: str = None):
-    """智能任务执行 - Agent自动分析用户输入"""
     console = Console()
     
     console.print(f"🧠 智能Agent启动")
@@ -199,10 +184,8 @@ async def run_non_interactive_task(user_input: str, working_dir: str = None):
             "git_branch": "main"
         }
         
-        # Agent自主执行
         result = await agent.execute_task_intelligently(task_context)
         
-        # 显示结果摘要
         console.print(Panel(
             f"状态: {result['status']}\n"
             f"使用轮次: {result['iteration']}\n"
@@ -210,6 +193,15 @@ async def run_non_interactive_task(user_input: str, working_dir: str = None):
             title="📊 任务执行摘要",
             border_style="green" if result['status'] == 'completed' else "yellow"
         ))
+        
+        # created_files = session.get_created_files()
+        # if created_files:
+        #     created_files_log = os.path.join(working_dir, "created_files.log")
+        #     with open(created_files_log, "w") as f:
+        #         for file_path in created_files:
+        #             f.write(f"{file_path}\n")
+        #     console.print(f"📝 创建文件列表已保存: {created_files_log}")
+        # # 注释：基于Session日志的文件追踪已禁用，回退到旧的文件收集方法
         
         return result
         

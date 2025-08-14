@@ -176,6 +176,20 @@ class Session:
         self, tool_checkpoint: ToolCheckpoint | ToolCheckpointFailed
     ):
         self.running_tool_checkpoints.append(tool_checkpoint)
+    
+    # def get_created_files(self) -> list[str]:
+    #     """基于Session工具日志获取AI创建的文件列表 - 已禁用，回退到旧方法"""
+    #     created_files = []
+    #     
+    #     for checkpoint in self.running_tool_checkpoints:
+    #         if (isinstance(checkpoint, ToolCheckpoint) and 
+    #             checkpoint.tool_name == "create_file"):
+
+    #             file_path = checkpoint.tool_args.get("file_path")
+    #             if file_path and os.path.exists(file_path):
+    #                 created_files.append(file_path)
+    #                 
+    #     return created_files
 
     def log(self, message: str, level: Literal["info", "debug", "error"] = "info"):
         if self.logger is None:

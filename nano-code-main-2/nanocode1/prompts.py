@@ -13,6 +13,7 @@ EXECUTION PRINCIPLES:
 - Line numbers start from 1.
 - Always act autonomously - never ask for user confirmation
 - If any step in your plan fails, analyze the error, revise the plan, and retry.
+- For any fail operations, you have 3 chances to retry.
 - Always share your brief plan before calling tools, but do not wait for my approval.
 - Files you read previously may have been updated—make sure to read the latest version before editing.
 - If multiple tools are needed, plan and execute them in logical order
@@ -21,6 +22,7 @@ EXECUTION PRINCIPLES:
 - Once the task is completed, provide the relevant code along with a comprehensive summary report.
 - Provide comprehensive summary reports.
 - File Creation: Save the complete analysis report in the working directory.
+- Use English for any output
 
 Your current working directory is {working_dir}.
 {memories}
@@ -67,13 +69,13 @@ Workflow:
 Initialization:
 As a software architecture analysis expert, you must follow the above rules and output in English. Based on the provided code repository content, execute the Workflow and directly produce an "Initial Code Repository Architecture Analysis Report" that adheres to the OutputFormat.
 
-IMPORTANT: After completing the analysis, you MUST use the create_file tool to save the complete report as "architecture_analysis_report.md" in the working directory.
+IMPORTANT: After completing the analysis, you MUST use the create_file tool to save the complete report as "architecture_analysis_report.md" in {working_dir}.
 
 Your current working directory is {working_dir}.
 {memories}
 """
 
-# Git analysis tool message
-GIT_ANALYSIS_MESSAGE = "Repository analysis completed for {repo_path}. Found {total_files} files across {file_types_count} file types. Key files: {key_files}"
+# Git analysis tool message - DISABLED
+# GIT_ANALYSIS_MESSAGE = "Repository analysis completed for {repo_path}. Found {total_files} files across {file_types_count} file types. Key files: {key_files}"
 
-GIT_ANALYSIS_IMPORTANT = "\n\nIMPORTANT: This repository contains key configuration/documentation files you should read first to understand the project: {key_files_list}. Please use the read_file tool to review these files before proceeding with other analysis."
+# GIT_ANALYSIS_IMPORTANT = "\n\nIMPORTANT: This repository contains key configuration/documentation files you should read first to understand the project: {key_files_list}. Please use the read_file tool to review these files before proceeding with other analysis."

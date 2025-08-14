@@ -9,8 +9,7 @@ from .task_executor import TaskExecutor
 
 
 class NanoCodeProxy:
-    """nano-code代理主控制器 (统一接口)"""
-    
+
     def __init__(self):
         self.config = DaytonaConfig()
         self.sandbox_manager = None
@@ -25,17 +24,14 @@ class NanoCodeProxy:
         signal.signal(signal.SIGTERM, self._cleanup_and_exit)
     
     def setup_daytona(self):
-        """创建并设置Daytona沙盒"""
         print("📦 创建Daytona沙盒...")
         
-        # 创建沙盒管理器并初始化沙盒
         self.sandbox_manager = SandboxManager(self.config)
         self.sandbox = self.sandbox_manager.create_sandbox()
         
         # 设置环境
         self.sandbox_manager.setup_environment()
         
-        # 初始化其他管理器
         self.workspace_manager = WorkspaceManager(self.sandbox)
         self.file_transfer = FileTransfer(self.sandbox)
         self.task_executor = TaskExecutor(self.sandbox)
@@ -43,26 +39,27 @@ class NanoCodeProxy:
         print(f"✅ 沙盒创建成功: {self.sandbox.id}")
     
     def start_nano_code_unified(self, user_input: str):
-        """统一任务执行 - Agent自动分析用户输入"""
         print(f"🚀 开始执行任务")
-        print(f"🧠 Agent将自动分析用户输入并选择合适的工具")
         
         session_id = "nano-code-unified-session"
         try:
-            # 创建工作会话
             self.workspace_manager.create_session(session_id)
             
-            # 设置工作区
             self.workspace_manager.setup_secure_workspace(session_id)
             
-            # 统一执行 - 让Agent自己分析用户输入
-            result = self.task_executor.execute_unified_task(session_id, user_input)
+            modified_input, uploaded_files = self.file_transfer.process_input_and_upload_files(user_input)
+            if uploaded_files:
+                print(f"📤 自动处理了 {len(uploaded_files)} 个文件")
             
-            # 收集并下载结果
-            self.file_transfer.collect_output_files(session_id, input_filenames=[])
+            self.task_executor.execute_unified_task(session_id, modified_input)
+            
+            print("📦 收集输出文件...")
+
+            input_filenames = [Path(f).name for f in uploaded_files] if uploaded_files else []
+            self.file_transfer.collect_output_files(session_id, input_filenames)
             downloaded_files = self.file_transfer.download_results(session_id)
             
-            # 显示结果
+
             if downloaded_files:
                 print(f"🎉 任务完成！共生成 {len(downloaded_files)} 个文件")
                 print("📁 结果文件已下载到: ~/Desktop/SandboxWork/download/")

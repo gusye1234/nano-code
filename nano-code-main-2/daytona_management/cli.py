@@ -1,5 +1,4 @@
 import sys
-from pathlib import Path
 from .proxy import NanoCodeProxy
 
 
@@ -14,6 +13,7 @@ def show_help():
     print("📖 示例 (智能模式 - Agent自动选择工具):")
     print("   python3 daytona_proxy.py \"分析CSV数据\"")
     print("   python3 daytona_proxy.py \"分析这个数据文件 data.csv\"")
+    print("   python3 daytona_proxy.py \"分析并可视化这两个数据 /path/file1.csv /path/file2.csv\"")
     print("   python3 daytona_proxy.py \"检查main.py和config.py的代码质量\"")
     print("   python3 daytona_proxy.py \"分析https://github.com/user/project的代码架构\"")
     print("   python3 daytona_proxy.py \"比较本地文件main.py和仓库https://github.com/user/repo\"")
@@ -26,12 +26,11 @@ def show_help():
 
 
 def parse_arguments() -> dict:
-    """解析命令行参数 (简化版 - Agent自动识别)"""
     # 检查基本参数
     if len(sys.argv) < 2:
         return {"show_help": True}
     
-    # 将所有参数合并为原始用户输入
+    # 所有参数合并为原始用户输入
     user_input = " ".join(sys.argv[1:])
     
     return {
@@ -59,7 +58,6 @@ def main():
         print(f"📋 用户输入: {args['user_input']}")
         print("=" * 60)
         
-        # 统一执行 - Agent自动分析用户输入
         proxy.start_nano_code_unified(args["user_input"])
         
     except KeyboardInterrupt:

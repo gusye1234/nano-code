@@ -12,7 +12,7 @@ from .util_tool import add_tasks
 from .Pyhton_Tool.ManageDependencies import ManageDependenciesTool
 from .Pyhton_Tool.RunCommand import RunCommandTool
 from .git_tool.clone_repo import CloneRepoTool
-from .git_tool.analyze_repo import AnalyzeRepoTool
+# from .git_tool.analyze_repo import AnalyzeRepoTool  # 已禁用分析工具
 
 OS_TOOLS = ToolRegistry()
 OS_TOOLS.add_tools(
@@ -49,6 +49,6 @@ GIT_TOOLS = ToolRegistry()
 GIT_TOOLS.add_tools(
     [
         CloneRepoTool.init(),
-        AnalyzeRepoTool.init(),
+        # AnalyzeRepoTool.init(),  # 已禁用分析工具
     ]
 )

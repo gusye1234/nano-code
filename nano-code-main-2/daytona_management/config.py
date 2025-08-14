@@ -16,7 +16,6 @@ class DaytonaConfig:
         """从环境变量加载Daytona API密钥"""
         api_key = os.getenv('DAYTONA_API_KEY')
         if not api_key:
-            # 临时使用现有的硬编码key（需要用户设置环境变量）
             api_key = "dtn_86397dd689b5eb656fa4bbc11a497ad1d368e34a2657951e562b104179257fec"
         return api_key
 
@@ -58,7 +57,6 @@ class PathConfig:
     
     WORKSPACE_ROOT = "/workspace"
     SYSTEM_DIR = "/workspace/system"
-    UPLOAD_DIR = "/workspace/upload"
     DOWNLOAD_DIR = "/workspace/download"
     TMP_DIR = "/workspace/tmp"
     

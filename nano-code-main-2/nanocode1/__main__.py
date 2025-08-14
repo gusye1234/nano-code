@@ -6,18 +6,16 @@ from .agent.non_interactive_agent import run_non_interactive_task
 
 
 
-
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="nano-code - 智能AI编程助手",
+        description="nano-code",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     
-    # 智能模式 - Agent自动分析用户输入
     parser.add_argument(
         "--user-input", "-u",
         required=True,
-        help="用户输入 - Agent自动分析并选择工具"
+        help="用户输入"
     )
     
     parser.add_argument(
@@ -28,9 +26,8 @@ def parse_args():
     
     return parser.parse_args()
 
-async def run_batch_mode(args):
+async def run_agent(args):
     try:
-        print("🧠 智能模式：Agent将自动分析用户输入")
         result = await run_non_interactive_task(
             user_input=args.user_input,
             working_dir=args.working_dir
@@ -51,7 +48,7 @@ async def run_batch_mode(args):
 def main():
 
     args = parse_args()
-    asyncio.run(run_batch_mode(args))
+    asyncio.run(run_agent(args))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from unittest import skip
 from daytona_sdk import Daytona, DaytonaConfig
 from daytona_sdk.common.process import SessionExecuteRequest
 from daytona_sdk.common.daytona import CreateSandboxFromImageParams
@@ -7,7 +8,6 @@ from .config import DaytonaConfig as Config
 
 
 class SandboxManager:
-    """Daytona沙盒生命周期管理"""
     
     def __init__(self, config: Config):
         self.config = config
@@ -15,10 +15,7 @@ class SandboxManager:
         self.sandbox = None
     
     def create_sandbox(self):
-        """创建Daytona沙盒"""
-        print("📦 创建Daytona沙盒...")
-        
-        # 配置Daytona客户端
+        # 配置Daytona
         daytona_config = DaytonaConfig(
             api_key=self.config.api_key, 
             api_url=self.config.api_url
@@ -51,7 +48,6 @@ class SandboxManager:
         print("🎉 环境设置完成！")
     
     def _upload_nanocode(self):
-        """上传本地nano-code代码"""
         # 上传nanocode1目录
         local_nanocode_path = Path(__file__).parent.parent / "nanocode1"
         if not local_nanocode_path.exists():
@@ -71,7 +67,6 @@ class SandboxManager:
         # 创建临时README.md
         readme_content = "# nanocode1\nAI coding assistant"
         self.sandbox.fs.upload_file(readme_content.encode(), "/workspace/README.md")
-        print("📤 创建临时README.md")
     
     def _upload_directory_recursive(self, local_dir: Path, remote_dir: str):
         """递归上传目录"""
@@ -112,8 +107,10 @@ class SandboxManager:
                 "python -c 'import sys; sys.path.insert(0, \"/workspace\"); import nanocode1; print(\"nano-code导入成功\")'",
             ]
             
+            print("Set up Environment")
+            
             for cmd in setup_commands:
-                print(f"🔄 执行: {cmd}")
+                #print(f"🔄 执行: {cmd}")
                 req = SessionExecuteRequest(command=cmd)
                 result = self.sandbox.process.execute_session_command(setup_session, req)
                 
@@ -121,7 +118,8 @@ class SandboxManager:
                     print(f"⚠️  命令执行失败: {cmd}")
                     print(f"错误输出: {result.output}")
                 else:
-                    print("✅ 命令执行成功")
+                    #print("✅ 命令执行成功")
+                    skip
             
             self.sandbox.process.delete_session(setup_session)
             

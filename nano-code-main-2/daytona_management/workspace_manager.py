@@ -3,17 +3,15 @@ from .config import PathConfig
 
 
 class WorkspaceManager:
-    """工作区管理和环境设置"""
     
     def __init__(self, sandbox):
         self.sandbox = sandbox
     
     def setup_secure_workspace(self, session_id: str):
-        """设置安全工作区目录结构"""
         print("🔒 设置工作区...")
         
         setup_commands = [
-            f"mkdir -p {PathConfig.SYSTEM_DIR} {PathConfig.UPLOAD_DIR} {PathConfig.DOWNLOAD_DIR} {PathConfig.TMP_DIR}",
+            f"mkdir -p {PathConfig.SYSTEM_DIR} {PathConfig.DOWNLOAD_DIR} {PathConfig.TMP_DIR}",
             
             f"mv {PathConfig.WORKSPACE_ROOT}/nanocode1 {PathConfig.SYSTEM_DIR}/ 2>/dev/null || true",
             
@@ -35,7 +33,6 @@ class WorkspaceManager:
                 print(f"⚠️  执行命令异常: {cmd} - {e}")
     
     def copy_files_to_workspace(self, session_id: str, remote_files: list) -> list:
-        """将上传的文件复制到工作区临时目录"""
         tmp_files = []
         
         if not remote_files:

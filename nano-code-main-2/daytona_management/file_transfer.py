@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import List, Optional
 from daytona_sdk.common.process import SessionExecuteRequest
+from openai import uploads
 from .config import PathConfig
+import re
 
 
 class FileTransfer:
@@ -11,7 +13,6 @@ class FileTransfer:
         self.sandbox = sandbox
     
     def upload_files(self, local_files: List[str]) -> List[str]:
-        """上传本地文件到沙盒upload目录"""
         print("📤 开始上传文件到upload目录...")
         uploaded_paths = []
         
@@ -29,7 +30,7 @@ class FileTransfer:
                 print(f"⚠️  本地文件不存在: {local_file}")
                 continue
                 
-            remote_path = f"{PathConfig.UPLOAD_DIR}/{local_path.name}"
+            remote_path = f"{PathConfig.TMP_DIR}/{local_path.name}"
             
             try:
                 with open(local_path, 'rb') as f:
@@ -47,6 +48,44 @@ class FileTransfer:
             print(f"📁 上传完成：{successful_uploads}/{total_files} 个文件成功")
         
         return uploaded_paths
+
+    def process_input_and_upload_files(self, user_input: str) -> tuple[str, list[str]]:
+        path_pattern = r'/[^\s]+\.[a-zA-Z0-9]+(?=\s|$)'
+        detected_paths = re.findall(path_pattern, user_input)
+        
+        valid_files = []
+        for path in detected_paths:
+            if Path(path).exists() and Path(path).is_file():
+                valid_files.append(path)
+            else:
+                print(f"⚠️  文件不存在或不可访问: {path}")
+        
+        if not valid_files:
+            return user_input, []
+
+        uploaded_paths = []
+        modified_input = user_input
+
+        for local_file in valid_files:
+            local_path = Path(local_file)
+            remote_path = f"{PathConfig.TMP_DIR}/{Path(local_path).name}"
+
+            try:
+                with open(local_path, 'rb') as f:
+                    file_content = f.read()
+                
+                self.sandbox.fs.upload_file(file_content, remote_path)
+                uploaded_paths.append(remote_path)
+
+                modified_input = modified_input.replace(local_file, remote_path)
+                print(f"✅ 上传成功: {local_file} → {remote_path}")
+            except Exception as e:
+                print(f"❌ 上传失败: {local_file} - {e}")
+        return modified_input, uploaded_paths
+
+
+
+            
     
     def download_results(self, session_id: str) -> List[str]:
         """下载结果文件到本地"""
@@ -165,3 +204,34 @@ class FileTransfer:
                 print("📁 未发现新创建的文件")
         else:
             print("📁 tmp目录中未发现文件")
+    
+    # def collect_output_files_from_session_log(self, session_id: str, created_files: List[str]):
+    #     """基于Session工具日志收集AI创建的文件"""
+    #     print("📦 基于Session日志收集AI创建的文件...")
+    #     
+    #     if not created_files:
+    #         print("📁 AI未创建任何文件")
+    #         return
+    #     
+    #     print(f"🔍 从工具日志发现 {len(created_files)} 个AI创建的文件")
+    #     
+    #     moved_count = 0
+    #     for file_path in created_files:
+    #         filename = file_path.split('/')[-1]  # 获取文件名
+    #         download_path = f"{PathConfig.DOWNLOAD_DIR}/{filename}"
+    #         
+    #         # 移动文件到下载目录
+    #         move_cmd = f"mv '{file_path}' '{download_path}'"
+    #         req = SessionExecuteRequest(command=move_cmd)
+    #         move_result = self.sandbox.process.execute_session_command(session_id, req)
+    #         
+    #         if move_result.exit_code == 0:
+    #             print(f"✅ 精准收集: {filename}")
+    #             moved_count += 1
+    #         else:
+    #             print(f"⚠️  收集失败: {filename}")
+    #     
+    #     if moved_count > 0:
+    #         print(f"📁 成功收集 {moved_count} 个AI创建的文件到 {PathConfig.DOWNLOAD_DIR}")
+    #     else:
+    #         print("⚠️  未能收集到任何文件")
