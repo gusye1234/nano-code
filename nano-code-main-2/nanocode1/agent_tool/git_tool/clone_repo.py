@@ -38,9 +38,15 @@ class CloneRepoTool(AgentToolDefine):
         """解析克隆策略 - 只处理最新版本"""
         repo_url = arguments["repo_url"]
         
+        # 确保target_dir只是目录名，不是完整路径
+        target_dir = arguments.get("target_dir") or self._extract_repo_name(repo_url)
+        if os.path.isabs(target_dir):
+            # 如果传入了绝对路径，只取最后的目录名
+            target_dir = os.path.basename(target_dir)
+        
         strategy = {
             "repo_url": repo_url,
-            "target_dir": arguments.get("target_dir") or self._extract_repo_name(repo_url),
+            "target_dir": target_dir,
             "branch": arguments.get("branch") or "auto"  # 用户指定分支或自动检测
         }
         
@@ -89,13 +95,17 @@ class CloneRepoTool(AgentToolDefine):
         main_branches = ["main", "master", "develop"]
         
         for branch in main_branches:
+            # 确保在repos目录中执行git命令，避免路径问题
+            repos_dir = os.path.dirname(target_path)
+            target_dir_name = os.path.basename(target_path)
+            
             git_cmd = [
                 "git", "clone",
                 "--depth", "1",
                 "--single-branch", 
                 "--branch", branch,
                 strategy["repo_url"], 
-                target_path
+                target_dir_name  # 在repos目录中使用相对路径
             ]
             
             try:
@@ -103,7 +113,7 @@ class CloneRepoTool(AgentToolDefine):
                     *git_cmd,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
-                    cwd=session.working_dir
+                    cwd=repos_dir  # 在repos目录中执行
                 )
                 
                 _, stderr = await process.communicate()
@@ -123,20 +133,24 @@ class CloneRepoTool(AgentToolDefine):
     async def _clone_specific_branch(self, strategy: dict, target_path: str, session: Session) -> AgentToolReturn:
         """克隆用户指定的分支（最新版本）"""
         
+        # 确保在repos目录中执行git命令，避免路径问题
+        repos_dir = os.path.dirname(target_path)
+        target_dir_name = os.path.basename(target_path)
+        
         git_cmd = [
             "git", "clone",
             "--depth", "1",  # 浅克隆，只要最新版本
             "--single-branch",
             "--branch", strategy["branch"],
             strategy["repo_url"], 
-            target_path
+            target_dir_name  # 在repos目录中使用相对路径
         ]
         
         process = await asyncio.create_subprocess_exec(
             *git_cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=session.working_dir
+            cwd=repos_dir  # 在repos目录中执行
         )
         
         _, stderr = await process.communicate()
@@ -156,13 +170,17 @@ class CloneRepoTool(AgentToolDefine):
 
     async def _fallback_clone(self, strategy: dict, target_path: str, session: Session) -> AgentToolReturn:
         """回退到默认克隆方式"""
-        git_cmd = ["git", "clone", "--depth", "1", strategy["repo_url"], target_path]
+        # 确保在repos目录中执行git命令，避免路径问题
+        repos_dir = os.path.dirname(target_path)
+        target_dir_name = os.path.basename(target_path)
+        
+        git_cmd = ["git", "clone", "--depth", "1", strategy["repo_url"], target_dir_name]
         
         process = await asyncio.create_subprocess_exec(
             *git_cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=session.working_dir
+            cwd=repos_dir  # 在repos目录中执行
         )
         
         _, stderr = await process.communicate()

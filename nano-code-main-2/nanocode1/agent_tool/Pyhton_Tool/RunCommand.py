@@ -5,14 +5,7 @@ from ...core.session import Session
 from .python_executor import PythonExecutor
 
 
-class RunCommandTool(AgentToolDefine):
-    """
-    Python代码执行工具
-    
-    功能：执行Python代码字符串或文件，在Daytona隔离环境中直接使用系统Python
-    提供详细的执行结果和错误分析
-    """
-    
+class RunCommandTool(AgentToolDefine):   
     @classmethod
     def init(cls, **kwargs):
         return cls(
@@ -32,7 +25,7 @@ Examples:
                     },
                     "file": {
                         "description": "Python file to run (use this OR code, not both)",
-                        "type": "string",
+                        "type": ["string", "null"],
                     },
                 },
                 "type": "object",

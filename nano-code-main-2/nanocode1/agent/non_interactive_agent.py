@@ -109,7 +109,9 @@ class NonInteractiveAgent:
             
             # 显示AI的思考过程
             if choice.message.content:
-                self.console.print(Panel(M(choice.message.content), title="Assistant"))
+                # 转义Rich Console标记以避免解析错误
+                safe_content = choice.message.content.replace('[', '\\[').replace(']', '\\]')
+                self.console.print(Panel(M(safe_content), title="Assistant"))
             
             # 添加助手消息
             messages.append(choice.message.model_dump())

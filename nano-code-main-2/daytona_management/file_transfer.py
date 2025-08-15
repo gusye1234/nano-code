@@ -168,6 +168,34 @@ class FileTransfer:
                     if 'repos/' in file_path or '/repos/' in file_path:
                         continue
                     
+                    # 更强的Git仓库检测：只保留明确的AI输出文件
+                    # 如果文件在一个看起来像Git仓库的目录中（有常见的仓库文件），跳过它
+                    path_parts = file_path.split('/')
+                    
+                    # 检查是否在同一个目录级别有常见的Git仓库文件
+                    file_dir = '/'.join(path_parts[:-1])  # 文件所在目录
+                    common_repo_files = ['README.md', 'LICENSE', 'setup.py', 'pyproject.toml', 'package.json', '.gitignore']
+                    
+                    # 简单策略：如果文件名是常见的源码文件类型，且不是明确的分析输出，跳过
+                    if (filename.endswith(('.py', '.js', '.ts', '.java', '.go', '.rs', '.cpp', '.c', '.h')) 
+                        and not filename.startswith('architecture_analysis_') 
+                        and not filename.startswith('analysis_')
+                        and not filename.startswith('project_structure')
+                        and not filename.startswith('application_flow')):
+                        continue
+                    
+                    # 保留matplotlib生成的PNG文件
+                    if filename.endswith('.png') and (
+                        filename.startswith('project_structure') or 
+                        filename.startswith('application_flow') or 
+                        'analysis' in filename):
+                        # 这些是AI生成的可视化文件，保留
+                        pass
+                    
+                    # 排除常见的仓库配置文件
+                    if filename in ['README.md', 'LICENSE', 'setup.py', 'pyproject.toml', 'package.json', '.gitignore', 'Cargo.toml', 'go.mod']:
+                        continue
+                    
                     # 检查是否应该排除
                     should_exclude = False
                     for pattern in PathConfig.EXCLUDE_PATTERNS:

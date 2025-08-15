@@ -35,8 +35,6 @@ class NanoCodeProxy:
         self.workspace_manager = WorkspaceManager(self.sandbox)
         self.file_transfer = FileTransfer(self.sandbox)
         self.task_executor = TaskExecutor(self.sandbox)
-        
-        print(f"✅ 沙盒创建成功: {self.sandbox.id}")
     
     def start_nano_code_unified(self, user_input: str):
         print(f"🚀 开始执行任务")
@@ -59,12 +57,20 @@ class NanoCodeProxy:
             self.file_transfer.collect_output_files(session_id, input_filenames)
             downloaded_files = self.file_transfer.download_results(session_id)
             
+            # 检查是否生成了预期的分析报告
+            report_found = any('architecture_analysis' in f or 'analysis' in f.lower() 
+                             for f in downloaded_files) if downloaded_files else False
 
             if downloaded_files:
                 print(f"🎉 任务完成！共生成 {len(downloaded_files)} 个文件")
                 print("📁 结果文件已下载到: ~/Desktop/SandboxWork/download/")
+                if report_found:
+                    print("✅ 发现分析报告文件")
+                else:
+                    print("⚠️  未找到预期的分析报告文件")
             else:
-                print("🎉 任务完成！")
+                print("⚠️  任务完成，但未生成任何输出文件")
+                print("💡 可能原因: AI未执行文件创建指令")
                 
         except Exception as e:
             print(f"❌ 任务执行失败: {e}")

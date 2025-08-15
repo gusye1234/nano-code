@@ -30,12 +30,18 @@
 
 ## 开发命令
 
-### 环境管理
+### 环境管理 (使用 uv)
+- `uv sync` - 同步所有依赖并创建虚拟环境
+- `uv sync --dev` - 同步包括开发依赖的所有依赖
+- `uv run <command>` - 在虚拟环境中运行命令
+- `uv add <package>` - 添加依赖到项目
+- `uv add --dev <package>` - 添加开发依赖到项目
+- `uv remove <package>` - 移除依赖
+
+### 传统环境管理 (备选)
 - `python -m venv venv` - 创建虚拟环境
 - `source venv/bin/activate` (Linux/Mac) 或 `venv\Scripts\activate` (Windows) - 激活虚拟环境
-- `deactivate` - 停用虚拟环境
 - `pip install -e .` - 以开发模式安装项目
-- `pip install -r requirements-dev.txt` - 安装开发依赖（如果可用）
 
 ### 核心应用命令 (智能模式)
 - `nanocode1 --user-input "分析这些文件的代码质量 main.py config.py"` - Agent自动识别文件并分析
@@ -50,28 +56,38 @@
 - `python3 daytona_proxy.py "生成项目技术文档并导出"` - Agent自动选择工具并生成输出
 
 ### 测试命令
+- `uv run pytest` - 运行所有测试
+- `uv run pytest tests/` - 运行 tests 目录中的测试
+- `uv run pytest -v` - 以详细输出运行测试
+- `uv run pytest --cov=nanocode1` - 运行测试并生成覆盖率报告
+- `uv run pytest tests/test_tools.py` - 运行特定测试文件
+- `uv run pytest tests/test_tools.py::test_specific_function` - 运行特定测试函数
+
+### 传统测试命令 (虚拟环境激活后)
 - `pytest` - 运行所有测试
-- `pytest tests/` - 运行 tests 目录中的测试
-- `pytest -v` - 以详细输出运行测试
-- `pytest --cov=nanocode1` - 运行测试并生成覆盖率报告
-- `pytest tests/test_tools.py` - 运行特定测试文件
 - `python -m pytest` - 替代的 pytest 执行方式
 
 ### 代码质量命令
+- `uv run black nanocode1/` - 使用 Black 格式化代码
+- `uv run isort nanocode1/` - 排序导入语句
+- `uv run flake8 nanocode1/` - 运行代码检查 (需要先添加 flake8 依赖)
+- `uv run mypy nanocode1/` - 类型检查 (需要先添加 mypy 依赖)
+
+### 传统代码质量命令 (虚拟环境激活后)
 - `python -m black nanocode1/` - 使用 Black 格式化代码
 - `python -m isort nanocode1/` - 排序导入语句
-- `python -m flake8 nanocode1/` - 运行代码检查
-- `python -m mypy nanocode1/` - 类型检查（如果已配置）
 
-### 包管理
-- `pip install -e .` - 以开发模式安装
-- `pip list --outdated` - 检查过时的包
-- `pip freeze > requirements.txt` - 生成依赖文件
+### 包管理 (使用 uv)
+- `uv lock` - 更新锁定文件
+- `uv sync` - 同步依赖
+- `uv tree` - 显示依赖树
+- `uv pip list` - 列出已安装的包
 
 ## 技术栈
 
 ### 核心技术
 - **Python 3.11+** - 主要编程语言
+- **uv** - 现代 Python 包管理和项目管理工具
 - **OpenAI API** - AI 助手功能的 LLM 集成
 - **Rich** - 终端界面和格式化
 - **asyncio** - 工具执行的异步编程
@@ -82,6 +98,7 @@
 - **pytest-cov** - 覆盖率报告
 - **pytest-asyncio** - 异步测试支持
 - **gitignore-parser** - Git 忽略文件解析
+- **GitHub Actions** - 持续集成和测试自动化
 
 ### AI 和自动化
 - **OpenAI GPT 模型** - 核心 AI 推理和代码生成
@@ -220,6 +237,12 @@ daytona_management/         # 🆕 Modular Daytona Proxy System
 - `--user-input` / `-u`: 用户输入 - Agent自动分析并选择工具（必需）
 - `--working-dir`: 工作目录（默认: 当前目录）
 
+### CI/CD 配置
+- **GitHub Actions**: 自动运行测试，配置在 `.github/workflows/ci.yml`
+- **测试环境**: Ubuntu Latest，使用 uv 进行依赖管理
+- **测试触发**: Push 到 main 分支或创建 Pull Request
+- **环境要求**: 需要设置 `OPENAI_API_KEY` 环境变量（测试中使用模拟值）
+
 ## 会话管理
 
 ### 内存系统
@@ -250,23 +273,24 @@ nanocode1 --user-input "分析https://github.com/user/repo并生成文档"
 ```
 
 ### 开发工作流程
-1. **创建虚拟环境**并安装依赖
-2. **运行现有测试**以确保基线功能
+1. **设置开发环境**: `uv sync --dev` - 安装所有依赖
+2. **运行现有测试**: `uv run pytest` - 确保基线功能
 3. **实现新功能**，遵循基于工具的架构
 4. **为新功能编写全面测试**
 5. **使用真实场景测试 nanocode1 CLI**
-6. **格式化代码并运行质量检查**
+6. **格式化代码**: `uv run black nanocode1/` 和 `uv run isort nanocode1/`
+7. **运行所有测试**: `uv run pytest --cov=nanocode1`
 
 ### 测试新工具
 ```bash
 # 测试特定工具功能
-pytest tests/test_new_tool.py -v
+uv run pytest tests/test_new_tool.py -v
 
 # 智能测试工具集成 - Agent自动识别测试场景
-nanocode1 --user-input "测试新工具功能 使用test_input.py作为输入"
+uv run nanocode1 --user-input "测试新工具功能 使用test_input.py作为输入"
 
 # 覆盖率报告
-pytest --cov=nanocode1 --cov-report=html
+uv run pytest --cov=nanocode1 --cov-report=html
 ```
 
 ## 安全指南
@@ -318,6 +342,10 @@ pytest --cov=nanocode1 --cov-report=html
 - **权限拒绝**: 检查文件和目录权限
 - **工具执行失败**: 查看工具架构和参数
 - **内存问题**: 增加迭代限制或优化工具使用
+- **uv 相关问题**:
+  - `uv sync` 失败: 检查 Python 版本是否 >= 3.11
+  - 依赖冲突: 使用 `uv lock --upgrade` 更新锁定文件
+  - 虚拟环境问题: 删除 `.venv` 目录后重新运行 `uv sync`
 
 ### 调试模式
 - 使用 **丰富控制台输出**获得详细执行日志
