@@ -17,14 +17,10 @@ class TaskExecutor:
         # 执行任务
         result = self._execute_command(session_id, unified_cmd)
         
-        # # 读取调用工具创建的文件列表
-        # created_files = self._read_created_files_log(session_id)
-        
         return {
             "success": result.exit_code == 0,
             "output": result.output,
             "exit_code": result.exit_code,
-            # "created_files": created_files  # 已禁用基于日志的文件追踪
         }
     
     def _build_unified_command(self, user_input: str) -> str:
@@ -54,25 +50,3 @@ class TaskExecutor:
             print("✅ 任务执行成功")
         
         return result
-    
-    # def _read_created_files_log(self, session_id: str) -> list:
-    #     # # 读取调用工具创建的文件列表
-    #     created_files_log = f"{PathConfig.TMP_DIR}/created_files.log"
-    #     
-    #     try:
-    #         # 检查日志文件是否存在
-    #         check_cmd = f"test -f '{created_files_log}' && cat '{created_files_log}' || echo ''"
-    #         req = SessionExecuteRequest(command=check_cmd)
-    #         result = self.sandbox.process.execute_session_command(session_id, req)
-    #         
-    #         if result.output.strip():
-    #             created_files = [line.strip() for line in result.output.strip().split('\n') if line.strip()]
-    #             print(f"📋 读取到 {len(created_files)} 个AI创建的文件")
-    #             return created_files
-    #         else:
-    #             print("📋 未发现AI创建文件日志")
-    #             return []
-    #             
-    #     except Exception as e:
-    #         print(f"⚠️  读取创建文件日志失败: {e}")
-    #         return []

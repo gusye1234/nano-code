@@ -1,0 +1,110 @@
+{
+  "dissertation_title": "From Coding Agent to the General Agent: Research into Real-world Coding Agents and Advanced Agent Algorithms",
+  "literature_topic": [
+    "Coding Agents in Real-world Applications",
+    "Generalization of Intelligent Agents",
+    "Agent Architecture Analysis",
+    "Advanced Agent Algorithms",
+    "Optimization of Agent Systems"
+  ],
+  "experimental_requirements": {
+    "code_repository_review": {
+      "url": "https://github.com/gusye1234/nano-code",
+      "description": "This GitHub repository, nano-code, contains the source code for a coding agent system. It is essential for reviewing the current code structure, understanding the working principles of the agent, and forming the base for conducting optimization experiments.",
+      "analysis_focus": [
+        "Code architecture (structure, modularity, workflow)",
+        "Agent's mechanism of operation",
+        "Existing algorithms and implementation details",
+        "Points of integration for proposed optimizations"
+      ]
+    },
+    "reproduction_tasks": [
+      {
+        "phase": "Initial Review and Documentation",
+        "target": "Understand and document the agent's workflow and architecture",
+        "methodology": "Analyze the code base and associated documentation; produce a code architecture analysis diagram"
+      },
+      {
+        "phase": "Agent Algorithm Research and Comparative Study",
+        "target": "Determine strengths and weaknesses of current agent algorithms",
+        "methodology": "Survey literature and compare with nano-code's approach; analyze and report on agent architectures"
+      },
+      {
+        "phase": "Proposal and Implementation of Optimizations",
+        "target": "Suggest and test optimization directions for nano-code",
+        "methodology": "Design and implement optimizations, evaluate performance impacts, document results"
+      }
+    ],
+    "critical_evaluation": {
+      "failure_case_study": "Document any limitations or failure cases in the current agent's architecture and workflow, such as scalability issues, response accuracy, or performance bottlenecks.",
+      "improvement_directions": [
+        "Enhancement of agent's decision-making algorithms",
+        "Refactoring code for scalability and maintainability",
+        "Integration of state-of-the-art agent architectures",
+        "Performance optimization under real-world coding tasks"
+      ]
+    }
+  },
+  "urls": [
+    {
+      "url": "https://github.com/gusye1234/nano-code",
+      "description": "The official code repository for nano-code, which needs to be reviewed for its architecture, functioning, and potential areas for improvement."
+    }
+  ]
+}
+
+
+{
+  "dissertation_title": "从编码代理到通用代理：关于真实世界编码代理与高级代理算法的研究",
+  "literature_topic": [
+    "编码代理在真实世界中的应用",
+    "智能代理的泛化能力",
+    "代理架构分析",
+    "高级代理算法",
+    "代理系统的优化"
+  ],
+  "experimental_requirements": {
+    "code_repository_review": {
+      "url": "https://github.com/gusye1234/nano-code",
+      "description": "该 GitHub 仓库 nano-code 包含一个编码代理系统的源代码。审查该仓库对于理解当前代码结构、掌握代理的工作原理以及为后续优化实验奠定基础至关重要。",
+      "analysis_focus": [
+        "代码架构（结构、模块化、工作流程）",
+        "代理的运行机制",
+        "现有算法及实现细节",
+        "拟议优化的集成点"
+      ]
+    },
+    "reproduction_tasks": [
+      {
+        "phase": "初步审查与文档整理",
+        "target": "理解并记录代理的工作流程和架构",
+        "methodology": "分析代码库及相关文档；生成代码架构分析图"
+      },
+      {
+        "phase": "代理算法研究与对比分析",
+        "target": "确定当前代理算法的优缺点",
+        "methodology": "调研相关文献并与 nano-code 的方法进行比较；分析并撰写代理架构报告"
+      },
+      {
+        "phase": "优化方案提出与实现",
+        "target": "为 nano-code 提出并测试优化方向",
+        "methodology": "设计并实现优化方案，评估其性能影响，整理并记录实验结果"
+      }
+    ],
+    "critical_evaluation": {
+      "failure_case_study": "记录当前代理架构与工作流程中的任何局限性或失败案例，例如可扩展性问题、响应准确性不足或性能瓶颈。",
+      "improvement_directions": [
+        "强化代理的决策算法",
+        "为可扩展性与可维护性进行代码重构",
+        "引入最新的代理架构",
+        "在真实编码任务下进行性能优化"
+      ]
+    }
+  },
+  "urls": [
+    {
+      "url": "https://github.com/gusye1234/nano-code",
+      "description": "nano-code 的官方代码仓库，需要对其架构、功能及潜在改进空间进行审查。"
+    }
+  ]
+}

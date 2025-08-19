@@ -62,7 +62,6 @@ class SandboxManager:
             with open(pyproject_path, 'rb') as f:
                 content = f.read()
             self.sandbox.fs.upload_file(content, "/workspace/pyproject.toml")
-            print("📤 上传pyproject.toml")
         
         # 创建临时README.md
         readme_content = "# nanocode1\nAI coding assistant"

@@ -1,0 +1,45 @@
+{
+  "dissertation_title": "Comparative Analysis of AI Coding Agents",
+  "literature_topic": [
+    "AI Coding Assistants",
+    "Code Generation",
+    "Agent Architectures"
+  ],
+  "experimental_requirements": {
+    "code_repository_review": {
+      "url": "https://github.com/microsoft/copilot-docs",
+      "description": "Analysis of Microsoft Copilot documentation and examples",
+      "analysis_focus": [
+        "Integration patterns",
+        "User interface design",
+        "Code suggestion mechanisms"
+      ]
+    },
+    "reproduction_tasks": [
+      {
+        "phase": "Comparative Study",
+        "target": "Compare different AI coding approaches",
+        "methodology": "Analyze multiple repositories and document differences"
+      },
+      {
+        "phase": "Feature Analysis",
+        "target": "Identify key features and capabilities",
+        "methodology": "Extract and categorize functionality"
+      }
+    ],
+    "critical_evaluation": {
+      "failure_case_study": "Document limitations in current AI coding tools",
+      "improvement_directions": [
+        "Enhanced context awareness",
+        "Better error handling",
+        "Improved user experience"
+      ]
+    }
+  },
+  "urls": [
+    {
+      "url": "https://github.com/microsoft/copilot-docs",
+      "description": "Microsoft Copilot documentation"
+    }
+  ]
+}

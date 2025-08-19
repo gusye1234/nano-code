@@ -9,6 +9,7 @@ from .os_tool import (
     mv_file_or_dir,
 )
 from .util_tool import add_tasks
+from .util_tool.render_mermaid import MermaidRenderTool
 from .Pyhton_Tool.ManageDependencies import ManageDependenciesTool
 from .Pyhton_Tool.RunCommand import RunCommandTool
 from .git_tool.clone_repo import CloneRepoTool
@@ -32,6 +33,7 @@ UTIL_TOOLS = ToolRegistry()
 UTIL_TOOLS.add_tools(
     [
         add_tasks.AddTasksTool.init(),
+        MermaidRenderTool.init(),
     ]
 )
 

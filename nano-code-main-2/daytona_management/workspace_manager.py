@@ -8,7 +8,6 @@ class WorkspaceManager:
         self.sandbox = sandbox
     
     def setup_secure_workspace(self, session_id: str):
-        print("🔒 设置工作区...")
         
         setup_commands = [
             f"mkdir -p {PathConfig.SYSTEM_DIR} {PathConfig.DOWNLOAD_DIR} {PathConfig.TMP_DIR}",
