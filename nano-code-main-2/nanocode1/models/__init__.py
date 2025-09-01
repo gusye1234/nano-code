@@ -10,7 +10,16 @@ from .dissertation_plan import (
     CriticalEvaluation,
     ExperimentalRequirements,
     UrlInfo,
+    AgentCommunication,
     DissertationPlan
+)
+
+from .output_format import (
+    ImageArtifact,
+    TableArtifact, 
+    CodeArtifact,
+    FileArtifact,
+    ReportModel
 )
 
 __all__ = [
@@ -19,5 +28,11 @@ __all__ = [
     "CriticalEvaluation", 
     "ExperimentalRequirements",
     "UrlInfo",
-    "DissertationPlan"
+    "AgentCommunication",
+    "DissertationPlan",
+    "ImageArtifact",
+    "TableArtifact",
+    "CodeArtifact", 
+    "FileArtifact",
+    "ReportModel"
 ]

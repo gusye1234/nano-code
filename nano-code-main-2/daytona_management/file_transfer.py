@@ -13,6 +13,13 @@ class FileTransfer:
         self.sandbox = sandbox
     
     def upload_files(self, local_files: List[str]) -> List[str]:
+        """
+        上传本地文件到upload目录
+        Args:
+            local_files (List[str]): 本地文件路径列表
+        Returns:
+            List[str]: 上传后的远程文件路径列表
+        """
         print("📤 开始上传文件到upload目录...")
         uploaded_paths = []
         
@@ -49,46 +56,44 @@ class FileTransfer:
         
         return uploaded_paths
 
-    def process_input_and_upload_files(self, user_input: str) -> tuple[str, list[str]]:
-        path_pattern = r'/[^\s]+\.[a-zA-Z0-9]+(?=\s|$)'
-        detected_paths = re.findall(path_pattern, user_input)
+    def process_json_file_and_upload(self, json_file_path: str) -> str:
+        """
+        处理JSON文件上传并返回远程路径, 这里是特殊的上传因为这个文件是任务上传
+        Args:
+            json_file_path (str): JSON文件路径
+        Returns:
+            str: 上传后的远程文件路径
+        """
+        local_path = Path(json_file_path)
         
-        valid_files = []
-        for path in detected_paths:
-            if Path(path).exists() and Path(path).is_file():
-                valid_files.append(path)
-            else:
-                print(f"⚠️  文件不存在或不可访问: {path}")
+        if not local_path.exists():
+            raise FileNotFoundError(f"JSON文件不存在: {json_file_path}")
         
-        if not valid_files:
-            return user_input, []
-
-        uploaded_paths = []
-        modified_input = user_input
-
-        for local_file in valid_files:
-            local_path = Path(local_file)
-            remote_path = f"{PathConfig.TMP_DIR}/{Path(local_path).name}"
-
-            try:
-                with open(local_path, 'rb') as f:
-                    file_content = f.read()
-                
-                self.sandbox.fs.upload_file(file_content, remote_path)
-                uploaded_paths.append(remote_path)
-
-                modified_input = modified_input.replace(local_file, remote_path)
-                print(f"✅ 上传成功: {local_file} → {remote_path}")
-            except Exception as e:
-                print(f"❌ 上传失败: {local_file} - {e}")
-        return modified_input, uploaded_paths
-
-
-
+        if not local_path.suffix.lower() == '.json':
+            raise ValueError(f"输入文件必须是JSON格式: {json_file_path}")
+        
+        # 上传JSON文件到远程
+        remote_path = f"{PathConfig.TMP_DIR}/{local_path.name}"
+        
+        try:
+            with open(local_path, 'rb') as f:
+                file_content = f.read()
             
+            self.sandbox.fs.upload_file(file_content, remote_path)
+            print(f"✅ 上传JSON文件: {json_file_path} → {remote_path}")
+            return remote_path
+            
+        except Exception as e:
+            raise Exception(f"上传JSON文件失败: {json_file_path} - {e}")
     
     def download_results(self, session_id: str) -> List[str]:
-        """下载结果文件到本地"""
+        """
+        下载结果文件到本地
+        Args:
+            session_id (str): 会话ID
+        Returns:
+            List[str]: 下载后的本地文件路径列表
+        """
         print("📥 开始下载结果文件...")
         
         # 创建本地下载目录
@@ -141,9 +146,16 @@ class FileTransfer:
             print(f"❌ 下载过程出错: {e}")
             return []
     
-    def collect_output_files(self, session_id: str, input_filenames: Optional[List[str]] = None):
-        """收集AI生成的输出文件到download目录"""
-        print("📦 收集输出文件...")
+    def collect_output_files(self, session_id: str, input_filenames: Optional[List[str]] = None, copy: bool = True):
+        """
+        收集AI生成的输出文件到download目录
+        Args:
+            session_id (str): 会话ID
+            input_filenames (Optional[List[str]]): 输入文件名列表，用于排除
+            copy (bool): True为复制模式（保留原文件），False为移动模式
+        """
+        operation_name = "复制" if copy else "移动"
+        print(f"📦 收集输出文件({operation_name}模式)...")
         
         find_cmd = f"find {PathConfig.TMP_DIR} -type f -not -path '*/.*' -not -path '*/__pycache__/*' -not -path '*/venv/*' 2>/dev/null"
         req = SessionExecuteRequest(command=find_cmd)
@@ -166,6 +178,10 @@ class FileTransfer:
                     
                     # 排除克隆的Git仓库目录
                     if 'repos/' in file_path or '/repos/' in file_path:
+                        continue
+
+                    # 保留 SimpleContext 上下文：不要移动 agent_context_*.json
+                    if filename.startswith('agent_context_') and filename.endswith('.json'):
                         continue
                     
                     # 更强的Git仓库检测：只保留明确的AI输出文件
@@ -209,57 +225,34 @@ class FileTransfer:
             if ai_generated_files:
                 print(f"🔍 发现 {len(ai_generated_files)} 个生成文件")
                 
-                moved_count = 0
+                processed_count = 0
                 for file_path in ai_generated_files:
                     filename = file_path.split('/')[-1]
                     download_path = f"{PathConfig.DOWNLOAD_DIR}/{filename}"
                     
-                    move_cmd = f"mv '{file_path}' '{download_path}'"
-                    req = SessionExecuteRequest(command=move_cmd)
-                    move_result = self.sandbox.process.execute_session_command(session_id, req)
-                    
-                    if move_result.exit_code == 0:
-                        print(f"✅ 收集生成文件: {filename}")
-                        moved_count += 1
+                    # 根据copy参数选择操作命令
+                    if copy:
+                        op_cmd = f"cp -f '{file_path}' '{download_path}'"
+                        action_verb = "复制"
                     else:
-                        print(f"⚠️  收集失败: {filename}")
+                        op_cmd = f"mv '{file_path}' '{download_path}'"
+                        action_verb = "移动"
+                    
+                    req = SessionExecuteRequest(command=op_cmd)
+                    op_result = self.sandbox.process.execute_session_command(session_id, req)
+                    
+                    if op_result.exit_code == 0:
+                        print(f"✅ {action_verb}生成文件: {filename}")
+                        processed_count += 1
+                    else:
+                        print(f"⚠️  {action_verb}失败: {filename}")
                 
-                if moved_count > 0:
-                    print(f"📁 成功收集 {moved_count} 个输出文件到 {PathConfig.DOWNLOAD_DIR}")
+                if processed_count > 0:
+                    print(f"📁 成功{operation_name} {processed_count} 个输出文件到 {PathConfig.DOWNLOAD_DIR}")
                 else:
-                    print("⚠️  未能收集到任何输出文件")
+                    print(f"⚠️  未能{operation_name}任何输出文件")
             else:
                 print("📁 未发现新创建的文件")
         else:
             print("📁 tmp目录中未发现文件")
     
-    # def collect_output_files_from_session_log(self, session_id: str, created_files: List[str]):
-    #     """基于Session工具日志收集AI创建的文件"""
-    #     print("📦 基于Session日志收集AI创建的文件...")
-    #     
-    #     if not created_files:
-    #         print("📁 AI未创建任何文件")
-    #         return
-    #     
-    #     print(f"🔍 从工具日志发现 {len(created_files)} 个AI创建的文件")
-    #     
-    #     moved_count = 0
-    #     for file_path in created_files:
-    #         filename = file_path.split('/')[-1]  # 获取文件名
-    #         download_path = f"{PathConfig.DOWNLOAD_DIR}/{filename}"
-    #         
-    #         # 移动文件到下载目录
-    #         move_cmd = f"mv '{file_path}' '{download_path}'"
-    #         req = SessionExecuteRequest(command=move_cmd)
-    #         move_result = self.sandbox.process.execute_session_command(session_id, req)
-    #         
-    #         if move_result.exit_code == 0:
-    #             print(f"✅ 精准收集: {filename}")
-    #             moved_count += 1
-    #         else:
-    #             print(f"⚠️  收集失败: {filename}")
-    #     
-    #     if moved_count > 0:
-    #         print(f"📁 成功收集 {moved_count} 个AI创建的文件到 {PathConfig.DOWNLOAD_DIR}")
-    #     else:
-    #         print("⚠️  未能收集到任何文件")

@@ -1,0 +1,70 @@
+{
+  "is_first_time": true,
+  "dissertation_title": "Search Agent Benchmark Plan: Testing Search Requirement Detection",
+  "literature_topic": [
+    "Evaluation of Search Agent Decision Accuracy",
+    "Benchmarking Intelligent Agent Search Needs",
+    "External Knowledge Integration in Coding Agents"
+  ],
+  "experimental_requirements": {
+    "code_repository_review": {
+      "url": "https://github.com/gusye1234/nano-code",
+      "description": "nano-code repository, containing source code for a coding agent system.",
+      "analysis_focus": [
+        "Code architecture (structure, modularity, workflow)",
+        "Agent's mechanism of operation",
+        "Existing algorithms and implementation details",
+        "Points of integration for proposed optimizations",
+        "Dependencies and external libraries documentation"
+      ]
+    },
+    "reproduction_tasks": [
+      {
+        "phase": "Initial Review and Documentation",
+        "target": "Generate a module dependency graph from the source code",
+        "methodology": "Parse the code repository and extract import relationships"
+      },
+      {
+        "phase": "Agent Algorithm Research and Comparative Study",
+        "target": "Survey recent papers on reinforcement learning based agents",
+        "methodology": "Collect and analyze at least 5 papers published in the last 3 years"
+      },
+      {
+        "phase": "Agent Algorithm Research and Comparative Study",
+        "target": "Compare nano-code's decision mechanism with GPT-based planners",
+        "methodology": "Search academic literature and technical reports"
+      },
+      {
+        "phase": "Proposal and Implementation of Optimizations",
+        "target": "Integrate state-of-the-art memory architectures into nano-code",
+        "methodology": "Research vector databases and memory-augmented agent designs"
+      },
+      {
+        "phase": "Proposal and Implementation of Optimizations",
+        "target": "Improve nano-code execution speed under heavy workloads",
+        "methodology": "Profile the existing code and optimize hotspots (no external search needed)"
+      },
+      {
+        "phase": "Real-world Application Study",
+        "target": "Benchmark nano-code against other open-source coding agents",
+        "methodology": "Search for available benchmarks, public datasets, and GitHub projects"
+      }
+    ],
+    "critical_evaluation": {
+      "failure_case_study": "Document limitations when handling large multi-file repositories (can be tested locally).",
+      "improvement_directions": [
+        "Enhancement of agent's decision-making algorithms",
+        "Refactoring code for scalability and maintainability",
+        "Integration of state-of-the-art agent architectures",
+        "Performance optimization under real-world coding tasks",
+        "Survey best practices from industry case studies"
+      ]
+    }
+  },
+  "urls": [
+    {
+      "url": "https://github.com/gusye1234/nano-code",
+      "description": "The official code repository for nano-code."
+    }
+  ]
+}

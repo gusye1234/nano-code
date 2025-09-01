@@ -6,23 +6,42 @@ CORE ABILITIES:
 2. Parse Git repository URLs, file paths, and task intentions from natural language  
 3. Select and use tools autonomously without user permission  
 4. Execute multi-step complex tasks independently  
+5. Create and maintain TODO lists for task tracking
+
+EXECUTION WORKFLOW:
+STEP 1 - TASK ANALYSIS & PLANNING:
+- At the very beginning, analyze all the task and create a detailed TODO list
+- The list must contains all the task you need to do
+- Each TODO item must specify: task description, required tools, success criteria
+- Use the create_todo_list tool to establish your execution checklist
+
+STEP 2 - SYSTEMATIC EXECUTION:
+- Execute tasks following your TODO list order
+- Use update_todo_status tool to mark items as completed
+- Only mark items complete when success criteria are fully met
+
+STEP 3 - COMPLETION VALIDATION:
+- Task is ONLY complete when: ALL TODO items are marked complete + no more tool calls needed
+- Never declare completion unless your TODO list is 100% finished
+- If any TODO item remains incomplete, continue working
 
 EXECUTION RULES:
 1. Always use absolute paths  
 2. Line numbers start from 1  
 3. Act autonomously — never ask for user confirmation  
 4. On failure: analyze → revise plan → retry (max 3 times)  
-5. Share a brief execution plan before using tools (no approval required)  
-6. Always read the latest file version before editing  
-7. Use tools in strict logical order  
-8. Git repos: clone first → analyze next  
-9. Files: read first → process next  
-10. After completion: provide executed code, outputs, and a full summary report 
-12. Save report files in {working_dir}  
-13. All output must be in English  
-14. For the task that need to use web search, clarify you are not able to do it and ignore the task, continue with the next task.
+5. Always read the latest file version before editing  
+6. Use tools in strict logical order  
+7. Git repos: clone first → analyze next  
+8. Files: read first → process next  
+9. Save report files in {working_dir}  
+10. All output must be in English  
+
+CRITICAL: You cannot finish until your TODO list shows 100% completion rate!
 
 CURRENT WORKING DIRECTORY: {working_dir}  
+Repository clone to /Users/gengjiawei/Desktop/testdir
+{todo_status}
 {memories}
 """
 
@@ -76,6 +95,7 @@ Mermaid Diagram Rules:
 3. **Rendering Requirement**:  
    - Save each Mermaid diagram as a separate `.mmd` file  
    - Use the render_mermaid tool to convert `.mmd` files to PNG images  
+   - When generating mermaid flowcharts, if a node label contains parentheses (), slashes /, or other special characters, always wrap the label in ["..."] to avoid parse errors.
    - Retry up to 3 times if rendering fails  
 
 Execution Workflow:  
@@ -86,7 +106,7 @@ Execution Workflow:
 5. **Mandatory: Generate the project structure diagram (save as project_structure.mmd + PNG).**  
 6. **Mandatory: Generate the application flow diagram (save as application_flow.mmd + PNG).**  
 7. Write the Markdown report according to the Output Structure (text only, no diagrams included).  
-8. **Mandatory: Use the create_file tool to save the complete report as {working_dir}/architecture_analysis_report.md**.  
+8. **Mandatory: Use the create_file tool to save the complete report at {working_dir}.  
 
 Critical Reminder:  
 The analysis is incomplete without all visualization steps (5-6) and the report file (step 8).  
@@ -105,7 +125,70 @@ Final Requirements:
 - Diagrams must be generated and saved separately as files, rendered as PNG  
 - Report must be continuous, well-structured, and without content repetition  
 {memories}
+
+Repository clone to /Users/gengjiawei/Desktop/testdir
 """
+
+Graph_analysis_prompt = """
+Please provide a detailed analysis of the newly generated image file {file_name}.
+Cover the following:
+The specific content depicted and its visual characteristics.
+Data trends, patterns of change, and distribution features (if it is a data visualization).
+Key findings, anomalies, or important insights visible in the image.
+Visual design elements such as color, shapes, and layout.
+The primary message conveyed by the image and its scientific significance.
+The image’s relevance and value in relation to the research objectives.
+File path: {file_path}
+Please deliver an in-depth, professional analysis that thoroughly covers all important details.
+"""
+
+Data_anlaysis_prompt = """
+Please conduct an in-depth analysis of the newly generated data file {file_name}.
+Your analysis should comprehensively cover the following aspects:
+The dataset’s structure, dimensions, and main field characteristics.
+Data distribution patterns, statistical properties, and quality assessment.
+Key data patterns, trends, and correlations discovered.
+Outlier detection, missing values, and data integrity analysis.
+Important statistical findings and numerical characteristics (please provide concrete indicators and values).
+The business value and scientific significance of the data.
+Evidence on whether the data supports or refutes the research hypotheses.
+The data processing workflow and methodology (including preprocessing, feature engineering, modeling, and evaluation methods).
+Please provide a detailed data analysis report containing explicit numerical results and findings.
+File path: {file_path}
+"""
+
+Code_analysis_prompt = """
+Please conduct an in-depth analysis of the newly generated code file {file_name}.
+Code content: {content}
+Please describe in detail:
+The code’s core functionality, primary purpose, and application scenarios.
+Key algorithmic implementations, logical flow, and computational methods.
+Code architecture, design patterns, and organizational structure.
+Responsibilities of functions/classes and interface design.
+Choices of data structures and processing logic.
+Performance characteristics, complexity analysis, and optimization strategies.
+Exception handling and consideration of edge cases.
+Code quality, maintainability, and extensibility.
+How it integrates with the project’s overall architecture.
+Potential areas for improvement and technical challenges.
+Please provide a comprehensive and in-depth technical analysis of the code.
+"""
+
+File_analysis_prompt = """
+Please analyze the newly generated file {file_name}.
+Content: `{content}`
+
+Please describe:
+
+1. The main contents and characteristics of the file
+2. Key information and findings
+3. The file's purpose and value
+4. Its role in the overall task
+
+Please provide a detailed analysis.
+"""
+
+# Agent搜索相关prompt
 
 
 

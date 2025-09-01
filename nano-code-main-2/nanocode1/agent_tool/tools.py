@@ -10,6 +10,7 @@ from .os_tool import (
 )
 from .util_tool import add_tasks
 from .util_tool.render_mermaid import MermaidRenderTool
+from .util_tool.todo_manager import TODO_TOOLS
 from .Pyhton_Tool.ManageDependencies import ManageDependenciesTool
 from .Pyhton_Tool.RunCommand import RunCommandTool
 from .git_tool.clone_repo import CloneRepoTool
@@ -34,7 +35,7 @@ UTIL_TOOLS.add_tools(
     [
         add_tasks.AddTasksTool.init(),
         MermaidRenderTool.init(),
-    ]
+    ] + [tool.init() for tool in TODO_TOOLS]
 )
 
 

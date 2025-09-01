@@ -1,0 +1,83 @@
+{
+  "is_first_time": false,
+  "dissertation_title": "nano-code 轻量化能力验证任务",
+  "literature_topic": [
+    "Coding Agent 架构快速综述",
+    "轻量化评测任务设计"
+  ],
+  "experimental_requirements": {
+    "code_repository_review": {
+      "url": "https://github.com/gusye1234/nano-code",
+      "description": "nano-code 仓库，包含一个简化的 Coding Agent 实现。",
+      "analysis_focus": [
+        "项目结构与模块职责",
+        "工具调用与执行循环",
+        "提示词与上下文注入点",
+        "可扩展性与潜在优化点"
+      ]
+    },
+    "reproduction_tasks": [
+      {
+        "phase": "快速仓库理解+可视化",
+        "target": "生成模块导入依赖图（Mermaid），渲染为PNG，并产出一段（<= 200 字）结构说明，三者放在同一个 Markdown 文件中",
+        "methodology": "静态扫描源码，提取 import 关系，按目录聚类模块职责；输出 Mermaid 源码和图像，并在同文档撰写简要说明"
+      },
+      {
+        "phase": "技术交接输出",
+        "target": "编写不少于1000字的的技术交接文档（架构、关键模块、运行方式），文末附 3 条后续优化路线图（要点即可）",
+        "methodology": "基于源码与已有文档自动归纳要点，输出 Markdown，并在末尾补充‘后续优化’要点"
+      },
+      {
+        "phase": "微小改进 + 类型注解",
+        "target": "为一个现有工具函数补充类型注解与简要注释，尝试改进代码提升性能并通过单元测试；说明性能提升点与验证方式",
+        "methodology": "选择一个易于修改的工具函数，添加类型注解与 docstring，小范围重构（如缓存/避免重复计算/更优数据结构），运行你自己创建的测试，并创建解释文档包含测试方法，测试数据，测试结果,同时包括测试代码"
+      },
+      {
+        "phase": "工作能力测试",
+        "target": "随机创建csv数据并使用工具对其进行数据分析以及可视化",
+        "methodology": "使用python的pandas库随机创建csv数据，使用matplotlib库对数据进行可视化"
+      }
+    ],
+    "critical_evaluation": {
+      "failure_case_study": "在无外部资料的情况下，可能对大型仓库的全局理解不充分。",
+      "improvement_directions": [
+        "提示词中注入外部资料的结构化位置",
+        "Artifacts 抽取与描述逻辑抽象",
+        "拆分超长文件，降低耦合度"
+      ]
+    }
+  },
+  "urls": [
+    {
+      "url": "https://github.com/gusye1234/nano-code",
+      "description": "nano-code 官方仓库"
+    }
+  ],
+  "agent_communicate": [
+    {
+      "id": "resp-1",
+      "request": "当前领先的 LLM Agent 架构及最新优化算法。",
+      "response": "当前领先的LLM Agent架构通常包含感知（多模态环境输入转内部表征）、思考与规划（任务分解、行动选择、资源调度，常以Chain of Thought、ReAct、Tree of Thoughts增强推理）、行动（文本、代码、API/工具调用执行）、记忆（短期、长期与知识检索，采用如FAISS、Pinecone等向量库）、反馈与自我学习（Reflexion、过程复盘提升自改进）。多个主流实现架构采用三维(构建-协作-演化)设计，涵盖角色机制（如Camel、MetaGPT）、复杂记忆模块（Voyager、Reflexion）、多路径任务规划（树思维）、混合集中与去中心化协作（Coscientist、MetaGPT、CAMEL等），并通过自动/可扩展的Agent体系（MetaAgent自动生成FSM，突破人工干预局限）适应多任务和实际部署需求。\n\n最新优化算法方面，Seed-LLM利用Seed Diffusion实现大幅提升推理速度（H20 GPU上达2,146 token/s），并在代码任务中速度-质量优于Mercury与Gemini Diffusion。MMaDA提出统一多模态扩散架构及统一策略梯度RL（UniGRPO），超越LLaMA-3-7B、Qwen2-7B等主要模型。RLVMR引入基于推理过程的奖励与密集过程级监督，使Agent在长时序任务中表现出鲁棒性和可解释性。TAAC通过多头注意力Actor-Critic促进多Agent动态通信与协作。MASCA通过分层多智能体、信号博弈与对比学习，提升金融信用评估的公平性与表现。DLRover采用LLM In-Context Learning few-shot范式、历史经验回放、专家CoT提示与offline RL自适应混合优化，高效自迭代资源调优。G-Core RLHF训练平台聚焦多模态大模型的可扩展性与动态资源，验证了微信场景下的高效RLHF流程。"
+    },
+    {
+      "id": "resp-2",
+      "request": "Coding Agent 在代码生成任务中的核心技术挑战和解决方案",
+      "response": "Coding Agent面临的核心技术挑战包括：1）上下文理解与维护：长代码序列的语义理解、跨文件依赖关系建模，通过增强的编码器-解码器架构（如CodeT5、CodeBERT）和图神经网络建模代码AST结构解决；2）代码质量保证：语法正确性、逻辑一致性、性能优化，采用多阶段验证（静态分析+动态执行+测试驱动生成）和强化学习反馈机制；3）领域特化适应：不同编程语言、框架API的差异性，通过少样本学习、领域自适应预训练和多任务学习解决；4）交互式编程：用户意图理解、增量式代码修改，基于对话历史的上下文注入和意图识别模型；5）代码推理与调试：错误定位、修复建议生成，结合程序分析技术和缺陷模式学习。主要解决方案包括CodeRL（强化学习优化代码生成）、AlphaCode（大规模竞赛级编程）、Codex-based系统（GitHub Copilot核心技术）、CodeGen系列（多语言生成）和最新的Code Llama、DeepSeek-Coder等专门优化的编程模型。"
+    },
+    {
+      "id": "resp-3", 
+      "request": "轻量化模型评测的标准化框架和指标体系设计原则",
+      "response": "轻量化模型评测框架应遵循多维度、可重现、成本敏感的设计原则。标准化框架包括：1）计算效率指标：推理延迟（P50/P95/P99分位数）、吞吐量（QPS）、内存峰值占用、GPU利用率，需在不同硬件配置（移动端、边缘设备、云端）下测试；2）模型性能指标：任务特定准确率、F1-score、BLEU/ROUGE（文本生成）、代码执行成功率（编程任务），与全尺寸模型的性能保持率；3）压缩质量指标：模型大小减少比例、推理速度提升倍数、能耗降低程度、量化精度损失；4）鲁棒性指标：对抗样本稳定性、分布外泛化能力、长尾场景表现。评测数据集应涵盖多样化场景：基础能力验证（如MMLU子集）、领域特化任务（如HumanEval代码生成）、实际部署场景模拟。框架实现应支持自动化pipeline、结果可视化、基准对比，并提供标准化的评测协议和复现包。关键设计原则包括：评测任务的代表性选择、评测环境的标准化、结果报告的透明性、评测成本的可控性。"
+    },
+    {
+      "id": "resp-4",
+      "request": "nano-code 这种轻量化 Coding Agent 实现的技术架构优势和局限性分析",
+      "response": "nano-code作为轻量化Coding Agent的技术架构优势主要体现在：1）简化的模块设计：采用核心工具链（代码执行、文件操作、测试运行）而非复杂工具生态，降低依赖复杂度和部署成本；2）直接的执行循环：简化的感知-思考-行动循环，避免过度抽象带来的性能损耗；3）快速迭代能力：轻量级架构便于快速原型验证和功能扩展；4）资源友好：内存占用和计算开销相对较小，适合资源受限环境。\n\n然而存在明显局限性：1）功能覆盖有限：相比AutoGPT、Langchain等完整框架，工具集和能力边界较窄；2）上下文管理简化：可能在复杂、长周期编程任务中出现上下文丢失；3）错误处理机制不够robust：缺乏复杂的异常恢复和重试逻辑；4）扩展性约束：架构简化可能限制高级功能（如多文件协同编辑、复杂依赖分析）的实现；5）缺乏持久化记忆：无法积累长期编程经验和模式识别。适用场景主要是教学演示、快速原型开发、简单自动化脚本生成，而不适合企业级复杂软件开发任务。优化方向包括渐进式能力扩展、插件化架构重构、上下文管理增强等。"
+    },
+    {
+      "id": "resp-5",
+      "request": "代码仓库静态分析和依赖关系可视化的最佳实践",
+      "response": "代码仓库静态分析和依赖可视化的最佳实践包括多层次分析策略：1）语法层分析：使用AST解析器（如Tree-sitter、ANTLR）提取import/require语句，建立直接依赖关系图；2）语义层分析：通过符号解析识别函数调用、类继承、接口实现等深层依赖；3）架构层分析：按目录结构、模块职责聚类，识别分层架构模式。\n\n可视化技术选择：Mermaid适合轻量级文档集成，Graphviz提供高度定制化布局，D3.js支持交互式探索，Cytoscape.js适合复杂网络分析。最佳实践包括：1）分层可视化：overview-详细视图结合，支持drill-down交互；2）依赖强度编码：通过边粗细、颜色表示调用频率或耦合度；3）聚类与过滤：按功能模块分组，支持按依赖类型过滤；4）异常检测：识别循环依赖、孤立模块、过度耦合等架构异味。\n\n工具链推荐：analyze-es6-modules（JS/TS）、pydeps（Python）、go-mod-graph（Go）、maven-dependency-plugin（Java），结合madge、dependency-cruiser等通用工具。输出格式应支持多种：静态图片（PNG/SVG）用于文档、交互式HTML用于探索、JSON/GraphML用于进一步分析。关键指标包括模块内聚性、模块间耦合度、依赖深度分布、关键路径识别等。"
+    }
+  ]
+}

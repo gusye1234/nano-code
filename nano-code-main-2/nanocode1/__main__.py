@@ -10,64 +10,64 @@ from .models.dissertation_plan import DissertationPlan
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="nanocode1 - AI编程助手 (支持URL分析和JSON任务执行)",
+        description="nanocode1",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     
     parser.add_argument(
         "input",
-        help="输入内容：URL地址(阶段1)或JSON任务文件路径(阶段2)"
+        nargs='?',
+        help="JSON文件路径或用户输入"
     )
     
     parser.add_argument(
         "--working-dir",
-        default=os.getcwd(),
-        help="工作目录（默认：当前目录）"
+        default=os.getcwd(),    
+        help="工作目录路径"
     )
+    
     
     return parser.parse_args()
 
 
-def detect_input_type(input_str: str) -> dict:
-    """智能检测输入类型并构建任务上下文."""
-    if input_str.startswith(('http://', 'https://')):
-        return {
-            "type": "url_analysis",
-            "url": input_str
-        }
+def load_task_plan(json_file: str) -> DissertationPlan:
+    """
+    从JSON文件加载任务计划
+    Args:
+        json_file (str): JSON文件路径
+    Returns:
+        DissertationPlan: 任务计划对象
+    """
+    input_path = Path(json_file)
+    if not input_path.exists() or input_path.suffix != '.json':
+        print(f"❌ 无效输入: {json_file}")
+        sys.exit(1)
     
-    input_path = Path(input_str)
-    if input_path.exists() and input_path.suffix == '.json':
-        try:
-            dissertation_plan = DissertationPlan.from_file(input_str)
-            return {
-                "type": "json_task_execution", 
-                "dissertation_plan": dissertation_plan
-            }
-        except Exception as e:
-            print(f"❌ JSON文件格式错误: {e}")
-            sys.exit(1)
-    
-    print(f"❌ 无效输入: {input_str}")
-    print("输入必须是URL(https://...)或JSON文件路径(.json)")
-    sys.exit(1)
+    try:
+        return DissertationPlan.from_file(json_file)
+    except Exception as e:
+        print(f"❌ JSON文件格式错误: {e}")
+        sys.exit(1)
+
+
 
 
 async def run_agent(args):
     try:
-        task_context = detect_input_type(args.input)
+        if not args.input:
+            print("❌ 请提供JSON文件路径")
+            sys.exit(1)
+            
+        dissertation_plan = load_task_plan(args.input)
         
         result = await run_intelligent_task(
-            task_context=task_context,
+            dissertation_plan=dissertation_plan,
             working_dir=args.working_dir
         )
         
         if result['status'] == 'completed':
             print("✅ 任务完成")
-            if result.get('phase') == 'url_analysis':
-                print("📄 代码分析文档已生成")
-            elif result.get('phase') == 'json_task_execution':
-                print("🎯 JSON任务执行完成")
+            print("🎯 JSON任务执行完成")
         else:
             print("⚠️ 任务未完全完成")
             

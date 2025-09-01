@@ -1,6 +1,4 @@
-import sys
 from pathlib import Path
-from unittest import skip
 from daytona_sdk import Daytona, DaytonaConfig
 from daytona_sdk.common.process import SessionExecuteRequest
 from daytona_sdk.common.daytona import CreateSandboxFromImageParams
@@ -76,7 +74,7 @@ class SandboxManager:
         for item in local_dir.rglob("*"):
             if item.is_file():
                 # 跳过不需要的文件
-                if any(skip in str(item) for skip in PathConfig.SKIP_PATTERNS):
+                if any(pattern in str(item) for pattern in PathConfig.SKIP_PATTERNS):
                     continue
                 
                 # 计算相对路径
@@ -100,9 +98,9 @@ class SandboxManager:
             setup_commands = [
                 "apt-get update",
                 "apt-get install -y git curl build-essential",
-                "pip install --no-cache-dir rich>=14.0.0 tiktoken>=0.9.0 openai>=1.92.2 gitignore-parser>=0.1.12",
+                "pip install --no-cache-dir rich>=14.0.0 tiktoken>=0.9.0 openai>=1.92.2 gitignore-parser>=0.1.12 json-repair>=0.25.0",
                 "cd /workspace && pip install --no-cache-dir -e . || echo '项目安装失败但依赖已安装'",
-                "python -c 'import rich, tiktoken, openai; print(\"依赖包安装成功\")'",
+                "python -c 'import rich, tiktoken, openai, json_repair; print(\"依赖包安装成功\")'",
                 "python -c 'import sys; sys.path.insert(0, \"/workspace\"); import nanocode1; print(\"nano-code导入成功\")'",
             ]
             
@@ -118,7 +116,7 @@ class SandboxManager:
                     print(f"错误输出: {result.output}")
                 else:
                     #print("✅ 命令执行成功")
-                    skip
+                    pass
             
             self.sandbox.process.delete_session(setup_session)
             

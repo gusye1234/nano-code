@@ -1,11 +1,6 @@
-"""
-Dissertation plan models for nanocode1.
-
-This module defines the data models for dissertation research plans.
-"""
 
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import List
 import json
 from pathlib import Path
 from json_repair import repair_json
@@ -39,11 +34,18 @@ class UrlInfo(BaseModel):
     description: str
 
 
+class AgentCommunication(BaseModel):
+    id: str #每个communication的唯一标识
+    request:str
+    response: str
+
 class DissertationPlan(BaseModel):
+    is_first_time: bool
     dissertation_title: str
     literature_topic: List[str]
     experimental_requirements: ExperimentalRequirements
     urls: List[UrlInfo]
+    agent_communicate: List[AgentCommunication]|None=None# TODO: 用于coding agent和search agent communication后的返回的结果
     
     @classmethod
     def from_file(cls, file_path: str) -> 'DissertationPlan':

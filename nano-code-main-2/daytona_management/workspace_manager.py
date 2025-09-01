@@ -56,6 +56,46 @@ class WorkspaceManager:
         """创建工作会话"""
         self.sandbox.process.create_session(session_id)
     
+    def ensure_session(self, session_id_base: str) -> str:
+        """
+        幂等创建会话，如果冲突则自动追加数字后缀
+        Args:
+            session_id_base (str): 基础会话名称
+        Returns:
+            str: 最终创建成功的会话ID
+        """
+        # 先尝试基础名称
+        try:
+            self.create_session(session_id_base)
+            return session_id_base
+        except Exception as e:
+            error_msg = str(e).lower()
+            # 判断是否为"已存在/冲突"类错误
+            conflict_keywords = ['exist', 'already', '409', 'conflict', 'duplicate']
+            if not any(keyword in error_msg for keyword in conflict_keywords):
+                # 非冲突错误，直接抛出
+                raise
+        
+        # 冲突情况：尝试带数字后缀的名称
+        max_attempts = 10
+        for i in range(1, max_attempts + 1):
+            session_id = f"{session_id_base}{i}"
+            try:
+                self.create_session(session_id)
+                print(f"💡 创建会话: {session_id} (基础名称已占用)")
+                return session_id
+            except Exception as e:
+                error_msg = str(e).lower()
+                # 同样判断冲突类型
+                if not any(keyword in error_msg for keyword in conflict_keywords):
+                    # 非冲突错误，直接抛出
+                    raise
+                # 冲突则继续尝试下一个数字
+                continue
+        
+        # 超过最大尝试次数
+        raise Exception(f"无法创建会话：已尝试 {session_id_base} 到 {session_id_base}{max_attempts}")
+    
     def delete_session(self, session_id: str):
         """删除工作会话"""
         try:

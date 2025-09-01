@@ -51,7 +51,22 @@
       "url": "https://github.com/gusye1234/nano-code",
       "description": "The official code repository for nano-code, which needs to be reviewed for its architecture, functioning, and potential areas for improvement."
     }
+  ],
+  "agent_communicate": [
+    {
+      "id": "search-0001",
+      "request": "近三年主流Agent算法的对比研究论文；主流Agent算法的性能评测数据。",
+      "response": ""
+    },
+    {
+      "id": "search-0002",
+      "request": "近三年Agent架构对比论文；主流Agent算法的最新综述性文献。",
+      "response": ""
+    },
+    {
+      "id": "search-0003",
+      "request": "近三年Agent架构对比论文；主流Agent架构的最新技术报告或综述。",
+      "response": ""
+    }
   ]
 }
-
-

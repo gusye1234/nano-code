@@ -1,22 +1,22 @@
 import os
 import json
+import time
 from pathlib import Path
 from typing import Tuple
-
 
 class DaytonaConfig:
     """Daytona 沙盒配置管理"""
     
-    def __init__(self):
+    def __init__(self, enable_volume: bool = False):
         self.api_key = self._load_daytona_api_key()
         self.api_url = "https://app.daytona.io/api"
         self.base_image = "python:3.11-slim"
-    
+        
     def _load_daytona_api_key(self) -> str:
         """从环境变量加载Daytona API密钥"""
         api_key = os.getenv('DAYTONA_API_KEY')
         if not api_key:
-            api_key = "dtn_59e948b39ae106fec98b009f42cf8bfedc1550ce839627c2c9548485a0f84142"
+            api_key = "dtn_c1114a4a1ac1daa8f88a19e5d6b3670c90522a8205b45ff699f4b3d409c5efe5"
         return api_key
 
 

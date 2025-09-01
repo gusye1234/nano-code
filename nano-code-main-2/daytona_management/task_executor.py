@@ -8,14 +8,21 @@ class TaskExecutor:
         self.sandbox = sandbox
         self.llm_config = LLMConfig()
     
-    def execute_unified_task(self, session_id: str, user_input: str) -> dict:
-        print(f"🚀 开始执行统一任务")
-        print(f"📝 用户输入: {user_input}")
+    def execute_json_task(self, session_id: str, json_remote_path: str) -> dict:
+        """
+        执行JSON任务文件
+        Args:
+            session_id (str): 会话ID
+            json_remote_path (str): JSON文件的远程路径
+        Returns:
+            dict: 执行结果，包含成功标志、输出和退出码
+        """
+        print(f"📝 JSON文件路径: {json_remote_path}")
         
-        unified_cmd = self._build_unified_command(user_input)
+        json_cmd = self._build_json_command(json_remote_path)
         
         # 执行任务
-        result = self._execute_command(session_id, unified_cmd)
+        result = self._execute_command(session_id, json_cmd)
         
         return {
             "success": result.exit_code == 0,
@@ -23,17 +30,19 @@ class TaskExecutor:
             "exit_code": result.exit_code,
         }
     
-    def _build_unified_command(self, user_input: str) -> str:
+    
+    def _build_json_command(self, json_remote_path: str) -> str:
+        """构建JSON任务执行命令"""
         return (
             f'cd {PathConfig.TMP_DIR} && '
             f'OPENAI_API_KEY="{self.llm_config.api_key}" '
             f'LLM_BASE_URL="{self.llm_config.base_url}" '
             f'PYTHONPATH="{PathConfig.SYSTEM_DIR}:$PYTHONPATH" '
-            f'python -m nanocode1 --user-input "{user_input}" --working-dir {PathConfig.TMP_DIR}'
+            f'python -m nanocode1 "{json_remote_path}" --working-dir {PathConfig.TMP_DIR}'
         )
     
     def _execute_command(self, session_id: str, command: str):
-        print(f"🔧 执行命令: {command}")
+        """执行命令"""
         
         req = SessionExecuteRequest(command=command)
         result = self.sandbox.process.execute_session_command(session_id, req)
