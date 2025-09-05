@@ -2,13 +2,15 @@ from pydantic import BaseModel
 from typing import List, Union, Any, Dict
 import json
 from pathlib import Path
+from json_repair import repair_json
 
 class ImageArtifact(BaseModel):
     """图像附件"""
     image: str  # Base64或文件路径
     title: str
     description: str
-    def image_to_base64(self, image_path):
+    @staticmethod
+    def image_to_base64(image_path: str) -> str:
         """将图像文件转换为 Base64 字符串"""
         import base64
         with open(image_path, "rb") as image_file:
@@ -55,3 +57,23 @@ class ReportModel(BaseModel):
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         return cls(**data)
+
+    @classmethod
+    def from_file(cls, file_path: str) -> 'ReportModel':
+        """Load ReportModel from JSON file."""
+        path = Path(file_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Report model file not found: {file_path}")
+        
+        with open(path, 'r', encoding='utf-8') as f:
+            json_str = f.read()
+        
+        try:
+            # 修复可能的JSON格式问题
+            repaired_json = repair_json(json_str)
+            # 解析为字典
+            data = json.loads(repaired_json)
+            # 转换为Pydantic模型对象
+            return cls(**data)
+        except Exception as e:
+            raise ValueError(f"Failed to parse dissertation plan JSON: {e}")

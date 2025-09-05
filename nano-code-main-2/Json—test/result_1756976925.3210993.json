@@ -1,0 +1,51 @@
+{
+  "is_first_time": false,
+  "dissertation_title": "Optimizing Recycling Facility Locations and Operations in Glasgow: Cost-minimization Analysis and Sensitivity Assessment",
+  "literature_topic": [],
+  "experimental_requirements": {
+    "overall_requirements": "The task requires modeling and solving an operational research optimization problem using spreadsheet modeling (Excel), focused on allocating recyclable waste from 12 city zones to a combination of existing and candidate recycling facilities. The input data includes costs, capacities, and waste volumes. Outputs include allocation recommendations for two scenarios, summary cost figures, and guidance for management in non-technical terms. Sensitivity analysis on scenario B (when Facility F's capacity changes) is required.",
+    "code_repository_review": {
+      "url": "E:/pycharm_project/plato/src/server/plato_server/agents/search_agent/agents/DataCaseStudy2024.xlsx",
+      "description": "This Excel file provides the core data for the optimization exercise, including facility locations, per-kg recycling costs by zone and facility, facility capacities, candidate facility costs, and monthly waste volumes per zone.",
+      "analysis_focus": [
+        "Formulating cost optimization model",
+        "Capacity constraints handling",
+        "Scenario comparison",
+        "Sensitivity analysis for facility F"
+      ]
+    },
+    "reproduction_tasks": [
+      {
+        "phase": "Scenario A Modeling",
+        "target": "Analyze and optimize operations using only the 4 existing facilities",
+        "methodology": "Setup an Excel model to minimize the total recycling and disposal costs, respecting facility capacities and assigning zone waste accordingly."
+      },
+      {
+        "phase": "Scenario B Modeling",
+        "target": "Analyze and optimize with the addition of facilities E and F to the current facilities",
+        "methodology": "Modify the Excel model to include E and F, their operation costs, and capacity constraints. Solve for cost-effective waste assignments."
+      },
+      {
+        "phase": "Sensitivity Analysis",
+        "target": "Assess how total cost in scenario B changes if Facility F's capacity changes",
+        "methodology": "Perform and report sensitivity analysis of the model with respect to changes in Facility F's capacity; interpret results in business language."
+      },
+      {
+        "phase": "Summary Letter Writing",
+        "target": "Summarize findings and recommendations for management without technical jargon",
+        "methodology": "Prepare a concise 1-page letter with justification and clear managerial insights for both scenarios and the sensitivity analysis."
+      }
+    ],
+    "critical_evaluation": {
+      "failure_case_study": "",
+      "improvement_directions": []
+    }
+  },
+  "urls": [
+    {
+      "url": "E:/pycharm_project/plato/src/server/plato_server/agents/search_agent/agents/DataCaseStudy2024.xlsx",
+      "description": "Excel data file containing all relevant numbers for modeling and solution."
+    }
+  ],
+  "agent_communicate": null
+}

@@ -6,11 +6,17 @@ from nanocode1.models import ReportModel
 
 async def main():
     agent = Coding_agent(working_dir="/Users/gengjiawei/Desktop/testdir")
-    plan = DissertationPlan.from_file("/Users/gengjiawei/Documents/coding/nano-code-main-2/Json—test/test_plan.json")
-    reportorplan = await agent.generate_report(plan)
+    plan = DissertationPlan.from_file("/Users/gengjiawei/Documents/coding/nano-code-main-2/dissertation_plan_with_search_requests.json")
+    existing_report = None  # 没有现有报告时传递 None
+
+    #existing_report = ReportModel.from_file("/Users/gengjiawei/Desktop/testdir/agent_output.json")
+    # 传入plan和已有的report_model
+    reportorplan = await agent.generate_report(plan, existing_report)
 
     if isinstance(reportorplan, DissertationPlan):
-        # 输出更新后的dissertation plan
+        print(json.dumps(reportorplan.model_dump(), ensure_ascii=False, indent=2))
+    elif isinstance(reportorplan, ReportModel):
         print(json.dumps(reportorplan.model_dump(), ensure_ascii=False, indent=2))
 
 asyncio.run(main())
+

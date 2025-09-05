@@ -24,6 +24,7 @@ class CriticalEvaluation(BaseModel):
 
 
 class ExperimentalRequirements(BaseModel):
+    overall_requirements: str
     code_repository_review: CodeRepositoryReview
     reproduction_tasks: List[ReproductionTask]
     critical_evaluation: CriticalEvaluation

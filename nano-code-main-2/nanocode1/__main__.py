@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 import asyncio
 import argparse
 from pathlib import Path

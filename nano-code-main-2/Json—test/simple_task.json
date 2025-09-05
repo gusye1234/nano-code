@@ -1,37 +1,48 @@
 {
   "is_first_time": false,
-  "dissertation_title": "Simple Code Analysis Task",
+  "dissertation_title": "AutoViz 可视化轻量测试",
   "literature_topic": [
-    "Code Quality Analysis",
-    "Software Architecture"
+    "自动化可视化",
+    "轻量级数据探索"
   ],
   "experimental_requirements": {
     "code_repository_review": {
-      "url": "https://github.com/gusye1234/nano-code",
-      "description": "Simple analysis of nano-code repository, file clone to /Users/gengjiawei/repos/nano-code ",
+      "url": "https://github.com/AutoViML/AutoViz",
+      "description": "使用 AutoViz 对本地生成的不同规模 CSV 数据进行可视化测试。",
       "analysis_focus": [
-        "Code structure",
-        "Main components"
+        "基本可视化输出效果",
+        "小规模与中大规模数据下的表现差异"
       ]
     },
     "reproduction_tasks": [
       {
-        "phase": "Quick Analysis",
-        "target": "Generate basic project overview",
-        "methodology": "Read main files and create summary"
+        "phase": "小规模数据可视化",
+        "target": "生成一个小型 CSV（约50行，3列），并使用 AutoViz 进行可视化，保存所生成的图表以及使用的代码文件",
+        "methodology": "通过 pandas 生成随机数据，保存为 CSV，再运行 AutoViz 生成图表"
+      },
+      {
+        "phase": "中等规模数据可视化",
+        "target": "生成一个中等规模 CSV（约1000行，5列），并使用 AutoViz 进行可视化，保存所生成的图表以及使用的代码文件",
+        "methodology": "创建包含数值型和分类型的合成数据，保存为 CSV，运行 AutoViz 查看效果"
+      },
+      {
+        "phase": "大规模数据快速检查",
+        "target": "生成一个较大规模 CSV（约8000行），并用 AutoViz 可视化，保存所生成的图表以及使用的代码文件",
+        "methodology": "测试 AutoViz 在较大数据下的运行速度与稳定性，确认是否正常输出图表"
       }
     ],
     "critical_evaluation": {
-      "failure_case_study": "Search for similar projects and identify any obvious code issues",
+      "failure_case_study": "记录 AutoViz 在大规模 CSV 下是否出现运行缓慢或报错",
       "improvement_directions": [
-        "Code organization improvements"
+        "优化大规模数据的处理能力",
+        "在运行耗时场景提供更清晰的进度提示"
       ]
     }
   },
   "urls": [
     {
-      "url": "https://github.com/gusye1234/nano-code",
-      "description": "Target repository for analysis"
+      "url": "https://github.com/AutoViML/AutoViz",
+      "description": "AutoViz 测试目标仓库"
     }
   ]
 }

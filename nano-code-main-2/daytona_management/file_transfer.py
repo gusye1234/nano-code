@@ -1,5 +1,7 @@
 from pathlib import Path
 from typing import List, Optional
+import json
+import os
 from daytona_sdk.common.process import SessionExecuteRequest
 from openai import uploads
 from .config import PathConfig
@@ -156,6 +158,17 @@ class FileTransfer:
         """
         operation_name = "复制" if copy else "移动"
         print(f"📦 收集输出文件({operation_name}模式)...")
+
+        # 先尝试通过 manifest (agent_output.json) 精确收集
+        try:
+            collected = self._collect_by_manifest(session_id, input_filenames or [], copy)
+            if collected > 0:
+                print(f"✅ 基于manifest收集 {collected} 个产物")
+                return
+            else:
+                print("ℹ️ 未通过manifest找到产物，回退为目录扫描模式")
+        except Exception as e:
+            print(f"⚠️  manifest收集失败，回退扫描: {e}")
         
         find_cmd = f"find {PathConfig.TMP_DIR} -type f -not -path '*/.*' -not -path '*/__pycache__/*' -not -path '*/venv/*' 2>/dev/null"
         req = SessionExecuteRequest(command=find_cmd)
@@ -178,10 +191,6 @@ class FileTransfer:
                     
                     # 排除克隆的Git仓库目录
                     if 'repos/' in file_path or '/repos/' in file_path:
-                        continue
-
-                    # 保留 SimpleContext 上下文：不要移动 agent_context_*.json
-                    if filename.startswith('agent_context_') and filename.endswith('.json'):
                         continue
                     
                     # 更强的Git仓库检测：只保留明确的AI输出文件
@@ -256,3 +265,119 @@ class FileTransfer:
         else:
             print("📁 tmp目录中未发现文件")
     
+    # ======== Manifest优先收集实现 ========
+    def _collect_by_manifest(self, session_id: str, input_filenames: List[str], copy: bool) -> int:
+        """优先根据 /workspace/tmp/agent_output.json 的 artifacts 清单收集产物"""
+        manifest_path = f"{PathConfig.TMP_DIR}/agent_output.json"
+        if not self._path_exists(session_id, manifest_path):
+            return 0
+
+        manifest_text = self._read_text(session_id, manifest_path)
+        if not manifest_text:
+            return 0
+
+        try:
+            data = json.loads(manifest_text)
+        except Exception:
+            return 0
+
+        artifacts = data.get("artifacts") or []
+        if not isinstance(artifacts, list) or not artifacts:
+            return 0
+
+        processed = 0
+        seen = set()
+        for a in artifacts:
+            for src in self._resolve_artifact_paths(a):
+                if not src:
+                    continue
+                if not self._path_exists(session_id, src):
+                    continue
+
+                filename = os.path.basename(src)
+                if filename in input_filenames:
+                    continue
+                if not self._is_allowed_output(filename):
+                    continue
+                if filename in seen:
+                    continue
+
+                dst = f"{PathConfig.DOWNLOAD_DIR}/{filename}"
+                if self._copy_or_move(session_id, src, dst, copy):
+                    processed += 1
+                    seen.add(filename)
+
+        return processed
+
+    def _resolve_artifact_paths(self, artifact: dict) -> List[str]:
+        """根据 artifact 字段推导潜在的远程文件路径列表"""
+        paths: List[str] = []
+        img = artifact.get("image")
+        if isinstance(img, str) and self._looks_like_path(img):
+            paths.append(img)
+
+        f = artifact.get("file")
+        if isinstance(f, str) and self._looks_like_path(f):
+            paths.append(f)
+
+        t = artifact.get("table")
+        if isinstance(t, str) and self._looks_like_path(t):
+            paths.append(t)
+
+        title = artifact.get("title")
+        if isinstance(title, str) and title:
+            paths.append(f"{PathConfig.TMP_DIR}/{title}")
+
+        dedup = []
+        seen = set()
+        for p in paths:
+            if p not in seen:
+                seen.add(p)
+                dedup.append(p)
+        return dedup
+
+    def _is_allowed_output(self, filename: str) -> bool:
+        """
+        检查文件名是否是允许的输出类型
+        """
+        ext = os.path.splitext(filename)[1].lower()
+        return ext in {".csv", ".txt", ".json", ".html", ".md", ".png", ".jpg", ".py", ".pdf", ".xlsx"}
+
+    def _copy_or_move(self, session_id: str, src: str, dst: str, copy: bool) -> bool:
+        """
+        复制或移动文件
+        """
+        cmd = f"cp -f '{src}' '{dst}'" if copy else f"mv '{src}' '{dst}'"
+        req = SessionExecuteRequest(command=cmd)
+        result = self.sandbox.process.execute_session_command(session_id, req)
+        if result and getattr(result, 'exit_code', 1) == 0:
+            print(f"✅ {'复制' if copy else '移动'}: {src} → {dst}")
+            return True
+        print(f"⚠️  {'复制' if copy else '移动'}失败: {src}")
+        return False
+
+    def _path_exists(self, session_id: str, path: str) -> bool:
+        """
+        检查文件路径是否存在
+        """
+        cmd = f"test -f '{path}' && echo YES || echo NO"
+        req = SessionExecuteRequest(command=cmd)
+        result = self.sandbox.process.execute_session_command(session_id, req)
+        out = (result.output or "").strip().upper()
+        return out.endswith("YES")
+
+    def _read_text(self, session_id: str, path: str) -> str:
+        """
+        读取文件内容
+        """
+        cmd = f"cat '{path}' 2>/dev/null || true"
+        req = SessionExecuteRequest(command=cmd)
+        result = self.sandbox.process.execute_session_command(session_id, req)
+        return (result.output or "") if result else ""
+
+    def _looks_like_path(self, value: str) -> bool:
+        """
+        检查字符串是否看起来像文件路径
+        路径可以是绝对路径（以 '/' 开头）或包含 '/workspace/' 的相对路径
+        """
+        return isinstance(value, str) and (value.startswith('/') or '/workspace/' in value)

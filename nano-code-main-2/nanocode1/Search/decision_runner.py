@@ -12,16 +12,10 @@ def read_plan(input_path: str) -> DissertationPlan:
     """从JSON文件中读取研究计划"""
     return DissertationPlan.from_file(input_path)
 
-
 def extract_tasks(plan: DissertationPlan) -> List[str]:
     """
     提取需要判断的任务候选项
     
-    从三个来源提取任务：
-    1. 代码仓库分析关注点
-    2. 复现任务的目标和方法  
-    3. 批判性评估的失败案例和改进方向
-
     """
     tasks: List[str] = []
 
@@ -36,90 +30,80 @@ def extract_tasks(plan: DissertationPlan) -> List[str]:
     # 2) 复现任务的目标和方法
     try:
         for task in plan.experimental_requirements.reproduction_tasks:
-            if hasattr(task, "target") and task.target:
-                tasks.append(f"阶段[{task.phase}] 目标: {task.target}")
-            if hasattr(task, "methodology") and task.methodology:
-                tasks.append(f"阶段[{task.phase}] 方法: {task.methodology}")
+            tasks.append(f"阶段[{task.phase}] 目标: {task.target} | 方法: {task.methodology}")
     except:
         pass
 
     # 3) 批判性评估
     try:
         ce = plan.experimental_requirements.critical_evaluation
-        if hasattr(ce, "failure_case_study") and ce.failure_case_study:
+        if ce.failure_case_study:
             tasks.append(f"失败案例: {ce.failure_case_study}")
-        if hasattr(ce, "improvement_directions") and ce.improvement_directions:
-            for direction in ce.improvement_directions:
-                if direction and isinstance(direction, str):
-                    tasks.append(f"改进方向: {direction}")
+        for direction in ce.improvement_directions or []:
+            if direction and isinstance(direction, str):
+                tasks.append(f"改进方向: {direction}")  
+
     except:
         pass
 
     return tasks
 
-
 def build_simple_prompt(task: str, plan: DissertationPlan) -> Tuple[str, list[dict]]:
-    """构建优化的LLM判断提示词，考虑计划中的可用资源"""
+    """
+    根据task构建prompt
+    """
     
     # 提取计划中的可用资源信息
     available_resources = []
-    if hasattr(plan, 'experimental_requirements') and plan.experimental_requirements:
-        # 代码仓库URL
-        if hasattr(plan.experimental_requirements, 'code_repository_review'):
-            repo = plan.experimental_requirements.code_repository_review
-            if hasattr(repo, 'url') and repo.url:
-                available_resources.append(f"代码仓库: {repo.url}")
-            if hasattr(repo, 'description') and repo.description:
-                available_resources.append(f"仓库描述: {repo.description}")
     
-    # 额外的URL资源
-    if hasattr(plan, 'urls') and plan.urls:
-        for url_info in plan.urls:
-            if hasattr(url_info, 'url'):
-                available_resources.append(f"可用URL: {url_info.url}")
+    if hasattr(plan.experimental_requirements, 'code_repository_review'):
+        repo = plan.experimental_requirements.code_repository_review
+        available_resources.append(f"代码仓库: {repo.url}")
+        available_resources.append(f"仓库描述: {repo.description}")
+    
     
     resources_text = "\n".join(available_resources) if available_resources else "无特定代码仓库"
     
     system_prompt = f"""你是一个严格的决策器，判断给定任务是否需要额外的外部资料搜索。
 
-【内部可获得的资料范围】
-- 研究计划JSON文件中提供的所有信息
-- 指定的代码仓库URL（等同于我们能完整获取和分析源码）
-- 通过代码仓库分析可以直接得到的内容：
-  * 代码架构和结构分析
-  * 工作流程和机制理解  
-  * 现有算法实现细节
-  * 代码质量和性能分析
-  * 模块化程度和集成点识别
-- 本地已克隆的代码副本和生成的分析文档
-- 历史分析结果和报告
+            【内部可获得的资料范围】
+            - 研究计划JSON文件中提供的所有信息
+            - 指定的代码仓库URL（等同于我们能完整获取和分析源码）
+            - 通过代码仓库分析可以直接得到的内容：
+            * 代码架构和结构分析
+            * 工作流程和机制理解  
+            * 现有算法实现细节
+            * 代码质量和性能分析
+            * 模块化程度和集成点识别
+            - 本地已克隆的代码副本和生成的分析文档
+            - 历史分析结果和报告
 
-【外部资料定义】
-仅指无法从上述内部资料获得的内容，需要额外搜索的资料：
-- 学术文献和研究论文
-- 行业对比数据和benchmark
-- 其他项目的实现方案对比
-- 最新的技术趋势和标准
-- 领域专家经验和最佳实践
+            【外部资料定义】
+            仅指无法从上述内部资料获得的内容，需要额外搜索的资料：
+            - 学术文献和研究论文
+            - 行业对比数据和benchmark
+            - 其他项目的实现方案对比
+            - 最新的技术趋势和标准
+            - 领域专家经验和最佳实践
 
-【当前研究计划的可用资源】
-{resources_text}
+            【当前研究计划的可用资源】
+            {resources_text}
 
-【判断规则】
-- 如果任务可以通过分析指定代码仓库、已有信息和内部资料完成 → NO_NEED
-- 如果任务明确需要外部文献、对比数据、行业调研等外部资料 → NEED: <简洁描述>
+            【判断规则】
+            - 如果任务可以通过分析指定代码仓库、已有信息和内部资料完成 → NO_NEED
+            - 如果任务明确需要外部文献、对比数据、行业调研等外部资料 → NEED: <简洁描述>
 
-【输出格式要求】
-严格按照以下格式输出，保持简洁：
-- NO_NEED
-- NEED: <最多20个字的简洁中文描述，例如"需要Agent对比研究的学术论文"或"需要编码基准测试数据">
+            【输出格式要求】
+            严格按照以下格式输出，保持简洁：
+            - NO_NEED
+            - NEED: <最多20个字的简洁中文描述，例如"需要Agent对比研究的学术论文"或"需要编码基准测试数据">
 
-【重要】：搜索请求必须简洁明了，避免冗长描述、技术细节或具体要求清单。"""
+            【重要】：搜索请求必须简洁明了，避免冗长描述、技术细节或具体要求清单。
+            """
 
     user_content = f"【待评估任务】\n{task}\n\n请严格按照上述标准判断该任务是否需要外部资料搜索。"
     
     return system_prompt, [{"role": "user", "content": user_content}]
-
 
 def parse_result(llm_output: str) -> Tuple[bool, str]:
     """解析LLM判断结果"""
@@ -141,7 +125,6 @@ def parse_result(llm_output: str) -> Tuple[bool, str]:
     
     return False, ""
 
-
 async def judge_task(session: Session, task: str, plan: DissertationPlan) -> Tuple[bool, str]:
     """使用LLM判断单个任务是否需要外部资料"""
     system_prompt, messages = build_simple_prompt(task, plan)
@@ -152,13 +135,11 @@ async def judge_task(session: Session, task: str, plan: DissertationPlan) -> Tup
             model=session.working_env.llm_main_model,
             messages=messages,
             system_prompt=system_prompt,
-            temperature=0
         )
         content = resp.choices[0].message.content if resp and resp.choices else ""
         return parse_result(content)
     except Exception:
         return False, ""
-
 
 def create_search_requests(tasks: List[str], judgements: List[Tuple[bool, str]]) -> List[AgentCommunication]:
     """根据判断结果创建搜索请求"""
@@ -177,7 +158,6 @@ def create_search_requests(tasks: List[str], judgements: List[Tuple[bool, str]])
     
     return requests
 
-
 def save_result(plan: DissertationPlan, search_requests: List[AgentCommunication], output_path: str):
     """保存结果到文件"""
     data = plan.model_dump()
@@ -186,54 +166,28 @@ def save_result(plan: DissertationPlan, search_requests: List[AgentCommunication
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-
-async def run_decision(input_path: str, output_path: str, working_dir: str, background_paths=None) -> None:
+async def run_decision(input_path: str, output_path: str, working_dir: str) -> None:
     """运行决策判断的主流程"""
     # 初始化
     logger = AIConsoleLogger()
     session = Session(working_dir=working_dir, logger=logger)
-    
-    # 注意：background_paths参数保持兼容性，但在简化版本中不使用
     
     # 读取计划
     plan = read_plan(input_path)
     
     # 检查是否为第一次分析
     if plan.is_first_time:
-        logger.info("decision", "第一次分析，跳过搜索判断")
         save_result(plan, [], output_path)
         return
     
     # 提取任务并判断
     tasks = extract_tasks(plan)
-    logger.info("decision", f"提取到 {len(tasks)} 个任务")
     
     judgements = []
     for i, task in enumerate(tasks, 1):
         need_search, search_desc = await judge_task(session, task, plan)
         judgements.append((need_search, search_desc))
-        
-        status = "需要搜索" if need_search else "无需搜索"
-        logger.info("judge", f"任务 {i}/{len(tasks)} - {status}")
-        if need_search:
-            logger.info("search", f"搜索请求: {search_desc}")
     
     # 创建搜索请求并保存
     search_requests = create_search_requests(tasks, judgements)
-    logger.info("result", f"生成 {len(search_requests)} 个搜索请求")
     save_result(plan, search_requests, output_path)
-
-
-if __name__ == "__main__":
-    import sys
-    import asyncio
-    
-    if len(sys.argv) < 2:
-        print("用法: python decision_runner.py <input_json_path> [output_json_path]")
-        sys.exit(1)
-    
-    input_path = sys.argv[1]
-    output_path = sys.argv[2] if len(sys.argv) > 2 else input_path.replace('.json', '_with_comm.json')
-    working_dir = "."
-    
-    asyncio.run(run_decision(input_path, output_path, working_dir))

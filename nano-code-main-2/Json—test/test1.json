@@ -1,0 +1,51 @@
+{
+  "is_first_time": false,
+  "dissertation_title": "Optimization of Recycling Facility Locations and Operations in Glasgow",
+  "literature_topic": [],
+  "experimental_requirements": {
+    "overall_requirements": "Formulate and solve an optimization problem comparing recycling costs and facility usage for waste management across 12 city zones in Glasgow under two scenarios: using existing facilities only, or opening two additional facilities. Output includes an Excel file with two model sheets and sensitivity analysis, plus a 1-page summary letter with recommendations in non-technical language.",
+    "code_repository_review": {
+      "url": "",
+      "description": "",
+      "analysis_focus": []
+    },
+    "reproduction_tasks": [
+      {
+        "phase": "Data Preparation",
+        "target": "Organize provided recycling costs, facility capacities, waste volumes, and disposal costs by zone and facility",
+        "methodology": "Extract and format data from given Excel (.xlsx) file for analysis"
+      },
+      {
+        "phase": "Model Formulation",
+        "target": "Develop two optimization models for scenarios (a) only existing facilities, and (b) existing plus candidate facilities",
+        "methodology": "Linear programming formulation to minimize the total cost, considering recycling and disposal costs, fixed costs for new facilities, and facility capacities"
+      },
+      {
+        "phase": "Solution and Analysis",
+        "target": "Solve the optimization models and generate results",
+        "methodology": "Implement models (e.g., using Python with solver libraries), record facility allocations, costs, and waste disposal for both scenarios"
+      },
+      {
+        "phase": "Sensitivity Analysis",
+        "target": "Investigate the effect of varying recycling capacity of facility F on the total cost in scenario b",
+        "methodology": "Vary the parameter for facility F's capacity and note changes in total cost"
+      },
+      {
+        "phase": "Report Writing",
+        "target": "Summarize findings and recommendations in non-technical terms",
+        "methodology": "Prepare a 1-page summary and organize all results in required Excel format"
+      }
+    ],
+    "critical_evaluation": {
+      "failure_case_study": "",
+      "improvement_directions": []
+    }
+  },
+  "urls": [
+    {
+      "url": "E:/pycharm_project/plato/src/server/plato_server/agents/search_agent/agents/DataCaseStudy2024.xlsx",
+      "description": "Excel file containing recycling costs, facility capacities, and waste generation data for use in the optimization model."
+    }
+  ],
+  "agent_communicate": null
+}

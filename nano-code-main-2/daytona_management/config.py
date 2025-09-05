@@ -16,7 +16,7 @@ class DaytonaConfig:
         """从环境变量加载Daytona API密钥"""
         api_key = os.getenv('DAYTONA_API_KEY')
         if not api_key:
-            api_key = "dtn_c1114a4a1ac1daa8f88a19e5d6b3670c90522a8205b45ff699f4b3d409c5efe5"
+            api_key = "dtn_9a34a912ed7e52032cfea293549bb88762452ffd66550d45cdc503c9a7fcc0d8"
         return api_key
 
 

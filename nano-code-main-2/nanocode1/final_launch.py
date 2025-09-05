@@ -25,12 +25,13 @@ class Coding_agent:
         self.working_dir = working_dir or os.getcwd()
         self.logger = AIConsoleLogger()
         
-    async def generate_report(self, dissertation_plan: DissertationPlan) -> ReportOrPlan:
+    async def generate_report(self, dissertation_plan: DissertationPlan, report_model: Optional[ReportModel] = None) -> ReportOrPlan:
         """
-        生成报告的主要方法，实现完整的workflow
+        生成报告的方法，完整的workflow
         
         Args:
             dissertation_plan: 论文计划
+            report_model: 可选的报告模型，指定输出格式
             
         Returns:
             ReportOrPlan: 根据情况返回ReportModel或DissertationPlan
@@ -40,33 +41,32 @@ class Coding_agent:
         try:
             # 1. 检查是否为第一次分析
             if dissertation_plan.is_first_time:
-                self.logger.info("workflow", "检测到第一次分析，直接进入coding agent执行")
-                reportorplan = await self._execute_coding_agent(dissertation_plan, is_first_time=True)
-                return reportorplan
+                report = await self._execute_coding_agent(dissertation_plan, report_model=report_model)   
+                return report
             
-            # 2. 检查是否已有完整的搜索响应
+            # 2. 检查literature_topic是否为空列表，如果为空则直接跳过搜索判断
+            if not dissertation_plan.literature_topic:
+                report = await self._execute_coding_agent(dissertation_plan, report_model=report_model)
+                return report
+            
+            # 3. 检查是否已有完整的搜索响应
             if (hasattr(dissertation_plan, 'agent_communicate') and 
                 dissertation_plan.agent_communicate and 
                 all(comm.response != "" for comm in dissertation_plan.agent_communicate)):
-                self.logger.info("workflow", "检测到完整搜索响应，直接执行coding agent")
-                reportorplan = await self._execute_coding_agent(dissertation_plan, is_first_time=False)
-                return reportorplan
+                report = await self._execute_coding_agent(dissertation_plan, report_model=report_model)
+                return report
             
-            # 3. 非第一次分析且无完整搜索响应，进行搜索判断
-            self.logger.info("workflow", "开始搜索需求判断")
+            # 4. 非第一次分析且无完整搜索响应，进行搜索判断
             updated_plan = await self._run_search_decision(dissertation_plan)
             
-            # 4. 检查搜索判断结果
+            # 5. 检查搜索判断结果
             if updated_plan.agent_communicate and any(comm.response == "" for comm in updated_plan.agent_communicate):
-                self.logger.info("workflow", "检测到需要搜索，返回带搜索请求的计划")
                 # 返回包含搜索请求的dissertation plan
-                reportorplan = updated_plan
-                return reportorplan
+                return updated_plan
             
-            # 5. 执行coding agent（如果搜索判断后无需搜索）
-            self.logger.info("workflow", "搜索判断完成，开始执行coding agent")
-            reportorplan = await self._execute_coding_agent(updated_plan, is_first_time=False)
-            return reportorplan
+            # 6. 执行coding agent（如果搜索判断后无需搜索）
+            report = await self._execute_coding_agent(updated_plan, report_model=report_model)
+            return report
             
         except Exception as e:
             self.logger.error("workflow", f"生成报告时发生错误: {str(e)}")
@@ -99,16 +99,13 @@ class Coding_agent:
                 input_path=temp_input_path,
                 output_path=output_path,
                 working_dir=self.working_dir,
-                background_paths=None  # 使用自动发现
             )
             
             # 读取结果
             if Path(output_path).exists():
                 updated_plan = DissertationPlan.from_file(output_path)
-                self.logger.info("search_decision", f"搜索需求文件已生成: {output_path}")
                 return updated_plan
             else:
-                self.logger.warning("search_decision", "搜索决策输出文件不存在，返回原计划")
                 return dissertation_plan
                 
         finally:
@@ -116,21 +113,23 @@ class Coding_agent:
             if Path(temp_input_path).exists():
                 Path(temp_input_path).unlink()
     
-    async def _execute_coding_agent(self, dissertation_plan: DissertationPlan, is_first_time: bool = False) -> ReportModel:
+    async def _execute_coding_agent(self, dissertation_plan: DissertationPlan,  report_model: Optional[ReportModel] = None) -> ReportModel:
         """执行coding agent
         
         Args:
             dissertation_plan: 论文计划
             is_first_time: 是否为第一次分析
+            report_model: 可选的报告模型，指定输出格式
             
         Returns:
             ReportModel: 生成的报告
         """
         try:
-            # 直接传递DissertationPlan对象给run_intelligent_task
+            # 传递DissertationPlan对象和existing_report给run_intelligent_task
             result = await run_intelligent_task(
                 dissertation_plan=dissertation_plan,
-                working_dir=self.working_dir
+                working_dir=self.working_dir,
+                existing_report=report_model
             )
             
             # 从结果中提取ReportModel
@@ -185,10 +184,11 @@ class Coding_agent:
 
 """
         Workflow:
-            1. 读取 dissertation_plan
+            1. 读取 dissertation_plan和report model（如果有）
             2. 检查是否为第一次分析
             3. 如果是第一次分析，直接输出原计划进入coding agent 使用raw analysis prompt 进行分析 返回report model（raw analysis）（分析代码仓库 产出分析md格式文件）
-            4. 如果不是第一次分析，Search 模块判断是否要搜索,判断的标准是有没有实例化agent communication类。 如果没有实例化就要搜索，如果有实例化且实例化的agent communication中有response就不需要搜索
+            4. 如果不是第一次分析，即同时输入dissertation plan和report model（此时只包含markdown文本，mmd文件和png文件）
+            4.1 Search 模块判断是否要搜索,判断的标准是有没有实例化agent communication类。 如果没有实例化就要搜索，如果有实例化且实例化的agent communicate中有response就不需要搜索
             5. 如果要搜索，分析需要搜索的内容， 返回dissertation_plan，但是实例化agent communicate类，填入id和request。
             6. 如果不需要搜索，dissertation plan直接输入进入coding agent，coding agent完成报告，ReportModelis_finish设置为 true
 """

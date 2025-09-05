@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import logging
+import zlib
 import requests
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,8 +38,8 @@ class MermaidSyntaxValidator:
     
     @staticmethod  
     def is_valid_png(response_data: bytes) -> bool:
-        """验证响应是否为有效PNG文件"""
-        return response_data.startswith(b'\x89PNG') and len(response_data) >= 1000
+        """验证响应是否为有效PNG文件（放宽：仅检查PNG头）"""
+        return response_data.startswith(b'\x89PNG')
 
 
 class MermaidRenderTool(AgentToolDefine):
@@ -167,19 +168,42 @@ class MermaidRenderTool(AgentToolDefine):
     async def _render_with_api(self, content: str, mermaid_path: Path, config: RenderConfig) -> Path:
         """使用mermaid.ink API渲染图表"""
         png_path = mermaid_path.with_suffix('.png')
-        api_url = self._build_api_url(content, config)
-        
+
         for attempt in range(config.max_retries):
             try:
-                logger.info(f"调用mermaid.ink API (尝试 {attempt + 1}/{config.max_retries})")
-                
-                response_data = await self._make_http_request(api_url)
-                self._validate_response(response_data)
-                
-                # 保存PNG文件
-                png_path.write_bytes(response_data)
-                logger.info(f"PNG文件保存成功: {png_path}")
-                return png_path
+                # 自适应降级：先降scale，再降width
+                current_scale = max(1, int(config.scale) - attempt)
+                # 当scale已降到1后，再逐步降低基准宽度
+                width_factor = 1.0
+                over = attempt - max(0, int(config.scale) - 1)
+                if over > 0:
+                    # 第一次超出：0.75，之后：0.5（保持简单、可预期）
+                    width_factor = 0.75 if over == 1 else 0.5
+
+                attempt_width = max(300, int(config.width * current_scale * width_factor))
+
+                urls = self._build_api_urls(content, attempt_width, config.bg_color)
+                logger.info(
+                    f"调用mermaid.ink API (尝试 {attempt + 1}/{config.max_retries}) "
+                    f"width={attempt_width}, scale={current_scale}, urls={len(urls)}"
+                )
+
+                last_error: Exception | None = None
+                for url in urls:
+                    try:
+                        response_data = await self._make_http_request(url)
+                        self._validate_response(response_data)
+                        # 保存PNG文件
+                        png_path.write_bytes(response_data)
+                        logger.info(f"PNG文件保存成功: {png_path}")
+                        return png_path
+                    except Exception as inner:
+                        last_error = inner
+                        logger.debug(f"URL 失败，尝试下一个编码方式: {inner}")
+
+                # 所有URL编码方式都失败，抛出最后的错误
+                if last_error:
+                    raise last_error
                 
             except Exception as e:
                 if self._should_retry(e, attempt, config.max_retries):
@@ -188,11 +212,27 @@ class MermaidRenderTool(AgentToolDefine):
                 raise
         
         raise Exception(f"经过 {config.max_retries} 次尝试后渲染失败")
-    
-    def _build_api_url(self, content: str, config: RenderConfig) -> str:
-        """构建API URL"""
+
+    def _build_api_urls(self, content: str, width: int, bg_color: str) -> list[str]:
+        """构建API URL（优先使用pako压缩，回退到普通base64）"""
+        urls: list[str] = []
+
+        # 1) pako 压缩（raw DEFLATE）
+        try:
+            compressor = zlib.compressobj(level=9, wbits=-15)
+            deflated = compressor.compress(content.encode("utf-8")) + compressor.flush()
+        except Exception:
+            deflated = b""
+
+        if deflated:
+            b64 = base64.urlsafe_b64encode(deflated).decode("ascii")
+            urls.append(f"https://mermaid.ink/img/pako:{b64}?type=png&width={width}&bgColor={bg_color}")
+
+        # 2) 普通 base64（非压缩）
         encoded_content = base64.urlsafe_b64encode(content.encode('utf8')).decode('ascii')
-        return f"https://mermaid.ink/img/{encoded_content}?type=png&width={config.actual_width}&bgColor={config.bg_color}"
+        urls.append(f"https://mermaid.ink/img/{encoded_content}?type=png&width={width}&bgColor={bg_color}")
+
+        return urls
     
     async def _make_http_request(self, url: str) -> bytes:
         """执行HTTP请求"""
@@ -217,4 +257,4 @@ class MermaidRenderTool(AgentToolDefine):
         """判断是否应该重试"""
         if MermaidSyntaxValidator.is_syntax_error(str(error)):
             return False  # 语法错误不重试
-        return attempt < max_retries - 1
+        return attempt < max_retries - 1 

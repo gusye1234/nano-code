@@ -52,6 +52,5 @@ GIT_TOOLS = ToolRegistry()
 GIT_TOOLS.add_tools(
     [
         CloneRepoTool.init(),
-        # AnalyzeRepoTool.init(),  # 已禁用分析工具
     ]
 )

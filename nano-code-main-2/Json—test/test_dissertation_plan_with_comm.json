@@ -11,7 +11,7 @@
   "experimental_requirements": {
     "code_repository_review": {
       "url": "https://github.com/gusye1234/nano-code",
-      "description": "This GitHub repository, nano-code, contains the source code for a coding agent system. It is essential for reviewing the current code structure, understanding the working principles of the agent, and forming the base for conducting optimization experiments. file clone to /Users/gengjiawei/repos/nano-code",
+      "description": "This GitHub repository, nano-code, contains the source code for a coding agent system. It is essential for reviewing the current code structure, understanding the working principles of the agent, and forming the base for conducting optimization experiments. ",
       "analysis_focus": [
         "Code architecture (structure, modularity, workflow)",
         "Agent's mechanism of operation",
@@ -55,18 +55,8 @@
   "agent_communicate": [
     {
       "id": "search-0001",
-      "request": "近三年主流Agent算法的对比研究论文；主流Agent算法的性能评测数据。",
-      "response": ""
-    },
-    {
-      "id": "search-0002",
-      "request": "近三年Agent架构对比论文；主流Agent算法的最新综述性文献。",
-      "response": ""
-    },
-    {
-      "id": "search-0003",
-      "request": "近三年Agent架构对比论文；主流Agent架构的最新技术报告或综述。",
-      "response": ""
+      "request": "当前领先的 LLM Agent 架构 及最新优化算法。",
+      "response": "当前领先的LLM Agent架构通常包含感知（多模态环境输入转内部表征）、思考与规划（任务分解、行动选择、资源调度，常以Chain of Thought、ReAct、Tree of Thoughts增强推理）、行动（文本、代码、API/工具调用执行）、记忆（短期、长期与知识检索，采用如FAISS、Pinecone等向量库）、反馈与自我学习（Reflexion、过程复盘提升自改进）。多个主流实现架构采用三维“构建-协作-演化”设计，涵盖角色机制（如Camel、MetaGPT）、复杂记忆模块（Voyager、Reflexion）、多路径任务规划（树思维）、混合集中与去中心化协作（Coscientist、MetaGPT、CAMEL等），并通过自动/可扩展的Agent体系（MetaAgent自动生成FSM，突破人工干预局限）适应多任务和实际部署需求。\n\n最新优化算法方面，Seed-LLM利用Seed Diffusion实现大幅提升推理速度（H20 GPU上达2,146 token/s），并在代码任务中速度-质量优于Mercury与Gemini Diffusion。MMaDA提出统一多模态扩散架构及统一策略梯度RL（UniGRPO），超越LLaMA-3-7B、Qwen2-7B等主要模型。RLVMR引入基于推理过程的奖励与密集过程级监督，使Agent在长时序任务中表现出鲁棒性和可解释性。TAAC通过多头注意力Actor-Critic促进多Agent动态通信与协作。MASCA通过分层多智能体、信号博弈与对比学习，提升金融信用评估的公平性与表现。DLRover采用LLM In-Context Learning few-shot范式、历史经验回放、专家CoT提示与offline RL自适应混合优化，高效自迭代资源调优。G-Core RLHF训练平台聚焦多模态大模型的可扩展性与动态资源，验证了微信场景下的高效RLHF流程。此外，还有去中心化差分隐私、模仿学习因果正则化、结构化规划与可信多Agent协议等优化新方向。主流评测和生态工具包括AgentBench、Mind2Web、LangChain、AutoGen等，为开发、训练与评测LLM Agent生态提供了系统支撑。"
     }
   ]
 }
